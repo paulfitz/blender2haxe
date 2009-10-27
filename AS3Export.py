@@ -10,6 +10,7 @@ Tooltip: 'Export geometry to ActionScript 3.0 Class (.as)'
 # ***** BEGIN GPL LICENSE BLOCK *****
 #
 # Copyright (C) 2007-2008 Dennis Ippel
+# Haxe-related changes copyright (C) 2009 Paul Fitzpatrick
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -40,7 +41,7 @@ http://www.rozengain.com
 
 #triangulate: go into edit mode, select all faces and press ctrl+t
  
-from Blender import Scene, Mesh, Window, Get, sys, Image, Draw
+from Blender import Scene, Mesh, Window, Get, sys, Image, Draw, Registry
 import Blender
 import BPyMessages 
 import bpy 
@@ -56,10 +57,36 @@ EVENT_EXIT = 3
 EVENT_EXPORT = 4
 EVENT_BROWSEFILE = 5
 
-as_package_name = Draw.Create("")
-fileButton = Draw.Create("")
-engine_menu = Draw.Create(1)
-export_all = None
+def update_registry():
+	global as_package_name
+	global engine_menu
+	global fileButton
+	global export_all
+	d = {}
+	d['as_package_name'] = as_package_name
+	d['engine_menu'] = engine_menu
+	d['fileButton'] = fileButton
+	d['export_all'] = export_all
+	Blender.Registry.SetKey('AS3Export', d, True)
+
+rdict = Registry.GetKey('AS3Export', True)
+got = False
+if rdict:
+	try:
+		as_package_name = rdict['as_package_name']
+		engine_menu = rdict['engine_menu']
+		fileButton = rdict['fileButton']
+		export_all = rdict['export_all']
+		got = True
+	except:
+		pass
+if not(got):
+	as_package_name = Draw.Create("")
+	engine_menu = Draw.Create(1)
+	fileButton = Draw.Create("")
+	export_all = None
+	update_registry()
+
 
 def get_path():
 	return os.path.dirname(inspect.currentframe().f_code.co_filename)
@@ -310,7 +337,7 @@ def main():
 	
 	# Restore editmode if it was enabled 
 	if is_editmode: Window.EditMode(1) 
-	 
+
 	print 'ActionScript 3.0 Exporter Script finished in %.2f seconds' % (sys.time()-t) 
 	Window.WaitCursor(0) 
 
@@ -330,6 +357,7 @@ def bevent(evt):
 	elif (evt== EVENT_DRAW):
 		Draw.Redraw()
 	elif (evt== EVENT_EXPORT):
+		update_registry()
 		sce = bpy.data.scenes.active 
 		
 		obs = None
