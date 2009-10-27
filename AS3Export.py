@@ -205,8 +205,11 @@ def export_away3d_lite_10(me, class_name):
 # for the quads addition
 ##########################################################################################
 
-def export_sandy(me, class_name):
-	file_name = "AS3ExpSandy30.as"
+def export_sandy(me, class_name, is_haxe):
+	if is_haxe:
+		file_name = "HXExpSandy30.hx"
+	else:
+		file_name = "AS3ExpSandy30.as"
 	data_loop = ""
 	transform_props = ""
 	
@@ -230,7 +233,7 @@ def export_sandy(me, class_name):
 	transform_props += "\n\t\t\trotateX = %f; rotateY = %f; rotateZ = %f;\n" % (ob_rotX, ob_rotY, ob_rotZ)
 	transform_props += "\n\t\t\tscaleX = %f; scaleY = %f; scaleZ = %f;\n" % (ob_scaleX, ob_scaleY, ob_scaleZ)
 
-	save_file(file_name, class_name, data_loop, transform_props)
+	save_file(file_name, class_name, data_loop, transform_props, is_haxe)
 
 ##########################################################################################
 # Alternativa 5.x export (based on Sandy code)
@@ -265,10 +268,14 @@ def export_alternativa3d(me, class_name):
 	
 	save_file(file_name, class_name, data_loop, transform_props)
 
-def save_file(file_name, class_name, data_loop, transform_props):
+def save_file(file_name, class_name, data_loop, transform_props,
+	      is_haxe=False):
 	try:
 		inf = open(Blender.Get('scriptsdir') +sys.sep+ "AS3Export" +sys.sep+ file_name, "r")
-		out = open(fileButton.val+""+class_name+".as", 'w')
+		ext = ".as"
+		if is_haxe:
+			ext = ".hx"
+		out = open(fileButton.val+""+class_name+ext, 'w')
 		try:
 			lines = inf.readlines()
 			for line in lines:
@@ -280,7 +287,7 @@ def save_file(file_name, class_name, data_loop, transform_props):
 		finally:
 			out.close()
 			inf.close()
-			print "Export Successful: "+class_name+".as"
+			print "Export Successful: "+class_name+ext
 	except:
 		Draw.PupMenu("Export failed | Check the console for more info")
 		raise # throw the exception
@@ -372,7 +379,9 @@ def export_to_as(ob):
 	elif (engine_menu.val == 3 ):
 		export_papervision2(me, class_name)
 	elif (engine_menu.val == 4 ):
-		export_sandy(me, class_name)
+		export_sandy(me, class_name, False)
+	elif (engine_menu.val == 41 ):
+		export_sandy(me, class_name, True)
 	elif (engine_menu.val == 7 ):
 		export_alternativa3d(me, class_name)
 	elif (engine_menu.val == 1 ):
@@ -415,7 +424,7 @@ def draw():
 	Draw.Image(logoImage, 40, 155)
 	
 	as_package_name = Draw.String("Package name: ", EVENT_NOEVENT, 40, 130, 250, 20, as_package_name.val, 300)
-	engine_name = "Alternativa3D 5.x%x7|Away3D%x1|Away3D 2.1.0%x5|Away3D 2.2, 2.3, 2.4, 3.4%x6|Away3D Lite Version 1.0%x8|Papervision3D%x2|Papervision3D 2.0%x3|Sandy 3.0%x4"
+	engine_name = "Alternativa3D 5.x%x7|Away3D%x1|Away3D 2.1.0%x5|Away3D 2.2, 2.3, 2.4, 3.4%x6|Away3D Lite Version 1.0%x8|Papervision3D%x2|Papervision3D 2.0%x3|Sandy 3.0%x4|Sandy Haxe 3.O%x41"
 	engine_menu = Draw.Menu(engine_name, EVENT_NOEVENT, 40, 100, 200, 20, engine_menu.val, "Choose your engine")
 
 	fileButton = Draw.String('File location: ', EVENT_NOEVENT, 40, 70, 250, 20, fileButton.val, 255) 
