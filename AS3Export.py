@@ -46,6 +46,7 @@ import BPyMessages
 import bpy 
 import math
 import os
+import inspect
 from math import *
 from Blender.BGL import *
 
@@ -59,6 +60,9 @@ as_package_name = Draw.Create("")
 fileButton = Draw.Create("")
 engine_menu = Draw.Create(1)
 export_all = None
+
+def get_path():
+	return os.path.dirname(inspect.currentframe().f_code.co_filename)
 
 def export_papervision(me, class_name): 
 	file_name = "AS3ExpPapervision17.as"
@@ -271,7 +275,7 @@ def export_alternativa3d(me, class_name):
 def save_file(file_name, class_name, data_loop, transform_props,
 	      is_haxe=False):
 	try:
-		inf = open(Blender.Get('scriptsdir') +sys.sep+ "AS3Export" +sys.sep+ file_name, "r")
+		inf = open(get_path()+sys.sep+ "AS3Export" +sys.sep+ file_name, "r")
 		ext = ".as"
 		if is_haxe:
 			ext = ".hx"
@@ -420,11 +424,11 @@ def draw():
 	glClear(GL_COLOR_BUFFER_BIT)
 	glRasterPos2i(40, 240)
 
-	logoImage = Image.Load(Get('scriptsdir')+sys.sep+'AS3Export'+sys.sep+'AS3Export.png')
+	logoImage = Image.Load(get_path()+sys.sep+'AS3Export'+sys.sep+'AS3Export.png')
 	Draw.Image(logoImage, 40, 155)
 	
 	as_package_name = Draw.String("Package name: ", EVENT_NOEVENT, 40, 130, 250, 20, as_package_name.val, 300)
-	engine_name = "Alternativa3D 5.x%x7|Away3D%x1|Away3D 2.1.0%x5|Away3D 2.2, 2.3, 2.4, 3.4%x6|Away3D Lite Version 1.0%x8|Papervision3D%x2|Papervision3D 2.0%x3|Sandy 3.0%x4|Sandy Haxe 3.O%x41"
+	engine_name = "Alternativa3D 5.x%x7|Away3D%x1|Away3D 2.1.0%x5|Away3D 2.2, 2.3, 2.4, 3.4%x6|Away3D Lite Version 1.0%x8|Papervision3D%x2|Papervision3D 2.0%x3|Sandy 3.0%x4|Sandy Haxe 3.0%x41"
 	engine_menu = Draw.Menu(engine_name, EVENT_NOEVENT, 40, 100, 200, 20, engine_menu.val, "Choose your engine")
 
 	fileButton = Draw.String('File location: ', EVENT_NOEVENT, 40, 70, 250, 20, fileButton.val, 255) 
