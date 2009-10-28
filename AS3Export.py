@@ -57,36 +57,42 @@ EVENT_EXIT = 3
 EVENT_EXPORT = 4
 EVENT_BROWSEFILE = 5
 
+reg_key = "AS3Export_2"
+
 def update_registry():
 	global as_package_name
 	global engine_menu
 	global fileButton
 	global export_all
 	d = {}
-	d['as_package_name'] = as_package_name
-	d['engine_menu'] = engine_menu
-	d['fileButton'] = fileButton
+	d['package_name'] = as_package_name.val
+	d['menu_selection'] = engine_menu.val
+	d['file_location'] = fileButton.val
 	d['export_all'] = export_all
-	Blender.Registry.SetKey('AS3Export', d, True)
+	Blender.Registry.SetKey(reg_key, d, True)
 
-rdict = Registry.GetKey('AS3Export', True)
+rdict = Registry.GetKey(reg_key, True)
 got = False
 if rdict:
 	try:
-		as_package_name = rdict['as_package_name']
-		engine_menu = rdict['engine_menu']
-		fileButton = rdict['fileButton']
+		package_name = rdict['package_name']
+		menu_selection = rdict['menu_selection']
+		file_location = rdict['file_location']
 		export_all = rdict['export_all']
 		got = True
 	except:
+		package_name = ""
+		menu_selection = 1
+		file_location = ""
+		export_all = None
 		pass
-if not(got):
-	as_package_name = Draw.Create("")
-	engine_menu = Draw.Create(1)
-	fileButton = Draw.Create("")
-	export_all = None
-	update_registry()
 
+as_package_name = Draw.Create(package_name)
+engine_menu = Draw.Create(menu_selection)
+fileButton = Draw.Create(file_location)
+update_registry()
+
+print as_package_name
 
 def get_path():
 	return os.path.dirname(inspect.currentframe().f_code.co_filename)
