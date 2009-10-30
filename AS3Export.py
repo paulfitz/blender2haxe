@@ -87,6 +87,8 @@ if rdict:
 		export_all = None
 		pass
 
+export_test = True
+
 as_package_name = Draw.Create(package_name)
 engine_menu = Draw.Create(menu_selection)
 fileButton = Draw.Create(file_location)
@@ -245,8 +247,12 @@ def export_away3d_lite_10(me, class_name):
 def export_sandy(me, class_name, is_haxe):
 	if is_haxe:
 		file_name = "HXExpSandy30.hx"
+		test_file_name = "HXExpSandy30_main.hx"
+		build_file_name = "HXExpSandy30_main.hxml"
 	else:
 		file_name = "AS3ExpSandy30.as"
+		test_file_name = None
+		build_file_name = None
 	data_loop = ""
 	transform_props = ""
 	
@@ -271,6 +277,17 @@ def export_sandy(me, class_name, is_haxe):
 	transform_props += "\n\t\t\tscaleX = %f; scaleY = %f; scaleZ = %f;\n" % (ob_scaleX, ob_scaleY, ob_scaleZ)
 
 	save_file(file_name, class_name, data_loop, transform_props, is_haxe)
+	if test_file_name and build_file_name and export_test:
+		save_file_ext(test_file_name,
+			      class_name + "Main",
+			      None,
+			      {'TESTED_CLASS_NAME': class_name},
+			      is_haxe)
+		save_file_ext(build_file_name,
+			      class_name + "Main",
+			      class_name + ".hxml",
+			      {'TESTED_CLASS_NAME': class_name},
+			      is_haxe)
 
 ##########################################################################################
 # Alternativa 5.x export (based on Sandy code)
@@ -307,24 +324,39 @@ def export_alternativa3d(me, class_name):
 
 def save_file(file_name, class_name, data_loop, transform_props,
 	      is_haxe=False):
+	tvars = {
+		'DATA_LOOP': data_loop,
+		'TRANSFORM_PROPS': transform_props,
+		}
+	save_file_ext(file_name,class_name,None,tvars,is_haxe)
+
+def save_file_ext(file_name,class_name,output_file_name,tvars,is_haxe):
+	tvars['PACKAGE_NAME'] = as_package_name.val
+	tvars['CLASS_NAME'] = class_name
 	try:
-		inf = open(get_path()+sys.sep+ "AS3Export" +sys.sep+ file_name, "r")
+		try:
+			inf = open(get_path()+sys.sep+ "AS3Export" +sys.sep+ file_name, "r")
+		except:
+			inf = open(get_path()+sys.sep+ "wrappers" +sys.sep+ file_name, "r")
+			
 		ext = ".as"
 		if is_haxe:
 			ext = ".hx"
-		out = open(fileButton.val+""+class_name+ext, 'w')
+		if not(output_file_name):
+			output_file_name = class_name+ext
+		reported_name = output_file_name
+		output_file_name = fileButton.val+""+output_file_name
+		out = open(output_file_name, 'w')
 		try:
 			lines = inf.readlines()
 			for line in lines:
-				line = line.replace("%PACKAGE_NAME%", as_package_name.val)
-				line = line.replace("%CLASS_NAME%", class_name)
-				line = line.replace("%DATA_LOOP%", data_loop)
-				line = line.replace("%TRANSFORM_PROPS%", transform_props)
+				for k in tvars:
+					line = line.replace("%" + k + "%", str(tvars[k]))
 				out.write(line)
 		finally:
 			out.close()
 			inf.close()
-			print "Export Successful: "+class_name+ext
+			print "Export Successful: "+reported_name
 	except:
 		Draw.PupMenu("Export failed | Check the console for more info")
 		raise # throw the exception
