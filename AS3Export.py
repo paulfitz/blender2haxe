@@ -63,12 +63,14 @@ def update_registry():
 	global as_package_name
 	global engine_menu
 	global fileButton
-	global export_all
+	global export_all_button
+	global export_test_button
 	d = {}
 	d['package_name'] = as_package_name.val
 	d['menu_selection'] = engine_menu.val
 	d['file_location'] = fileButton.val
-	d['export_all'] = export_all
+	d['export_all'] = export_all_button.val
+	d['export_test'] = export_test_button.val
 	Blender.Registry.SetKey(reg_key, d, True)
 
 rdict = Registry.GetKey(reg_key, True)
@@ -79,19 +81,21 @@ if rdict:
 		menu_selection = rdict['menu_selection']
 		file_location = rdict['file_location']
 		export_all = rdict['export_all']
+		export_test = rdict['export_test']
 		got = True
 	except:
 		package_name = ""
 		menu_selection = 1
 		file_location = ""
-		export_all = None
+		export_all = 0
+		export_test = 0
 		pass
-
-export_test = True
 
 as_package_name = Draw.Create(package_name)
 engine_menu = Draw.Create(menu_selection)
 fileButton = Draw.Create(file_location)
+export_all_button = Draw.Create(export_all)
+export_test_button = Draw.Create(export_test)
 update_registry()
 
 print as_package_name
@@ -277,7 +281,7 @@ def export_sandy(me, class_name, is_haxe):
 	transform_props += "\n\t\t\tscaleX = %f; scaleY = %f; scaleZ = %f;\n" % (ob_scaleX, ob_scaleY, ob_scaleZ)
 
 	save_file(file_name, class_name, data_loop, transform_props, is_haxe)
-	if test_file_name and build_file_name and export_test:
+	if test_file_name and build_file_name and export_test_button.val:
 		save_file_ext(test_file_name,
 			      class_name + "Main",
 			      None,
@@ -400,7 +404,7 @@ def bevent(evt):
 		
 		obs = None
 		
-		if(export_all == 1):
+		if(export_all_button.val == 1):
 			# export all scene objects
 			obs = [ob for ob in sce.objects if ob.type == 'Mesh']
 		else:
@@ -484,7 +488,10 @@ def draw():
 	global fileButton, expFileName
 	global engine_menu, engine_name
 	global EVENT_NOEVENT,EVENT_DRAW,EVENT_EXIT,EVENT_EXPORT
+	global export_all_button
+	global export_test_button
 	global export_all
+	global export_test
 	expFileName = ""
 	########## Titles
 	glClear(GL_COLOR_BUFFER_BIT)
@@ -499,7 +506,8 @@ def draw():
 
 	fileButton = Draw.String('File location: ', EVENT_NOEVENT, 40, 70, 250, 20, fileButton.val, 255) 
 	Draw.PushButton('...', EVENT_BROWSEFILE, 300, 70, 30, 20, 'browse file')
-	export_all = Draw.Toggle('Export ALL scene objects', EVENT_NOEVENT, 40, 45, 200, 20, 0)
+	export_all_button = Draw.Toggle('Export ALL scene objects', EVENT_NOEVENT, 40, 45, 200, 20, export_all_button.val)
+	export_test_button = Draw.Toggle('Export test code for object(s)', EVENT_NOEVENT, 250, 45, 200, 20, export_test_button.val)
 	######### Draw and Exit Buttons
 	Draw.Button("Export",EVENT_EXPORT , 40, 20, 80, 18)
 	Draw.Button("Exit",EVENT_EXIT , 140, 20, 80, 18)
