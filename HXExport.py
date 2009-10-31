@@ -29,6 +29,10 @@ Tooltip: 'Export geometry to Haxe Class (.hx)'
 # ***** END GPL LICENCE BLOCK *****
 # --------------------------------------------------------------------------
 
+
+# --------------------------------------------------------------------------
+# Information about this script for Blender
+
 __author__ = "Paul Fitzpatrick"
 __url__ = ("http://live.makesweet.com")
 __version__ = "0.1"
@@ -38,28 +42,29 @@ __bpydoc__ = """
 Based on AS3Export by Dennis Ippel.
 """
 
+
+# --------------------------------------------------------------------------
+# Imports.
+#
 # Import jinja2 for templates.
 # Not sure exactly how best to do this in a Blender python script.
 # Even just finding the current path was a little dicey, __file__ is
 # not available.
 import os
 import sys
-import inspect
 def get_path():
-    return os.path.dirname(inspect.currentframe().f_code.co_filename)
+    try:
+        p = os.path.dirname(__file__)
+    except:
+        import inspect
+        p = os.path.dirname(inspect.currentframe().f_code.co_filename)
+    p = os.path.abspath(p)
+    return p
 sys.path.append(get_path())
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 template_dirs = []
 template_dirs.append(get_path()+"/"+ "template")
 env = Environment(loader = FileSystemLoader(template_dirs))
-
-def render(template_name, variables):
-    try:
-	template = env.get_template(template_name)
-    except TemplateNotFound:
-	raise TemplateNotFound(template_name)
-    content = template.render(variables)
-    return content
 
 from Blender import Scene, Mesh, Window, Get, sys, Image, Draw
 from Blender import Registry, Camera, Object
@@ -70,11 +75,9 @@ import math
 from math import *
 from Blender.BGL import *
 
-EVENT_NOEVENT = 1
-EVENT_DRAW = 2
-EVENT_EXIT = 3
-EVENT_EXPORT = 4
-EVENT_BROWSEFILE = 5
+
+# --------------------------------------------------------------------------
+# Store defaults in Blender
 
 reg_key = "HXExport"
 
@@ -115,6 +118,19 @@ export_all_button = Draw.Create(export_all)
 export_test_button = Draw.Create(export_test)
 update_registry()
 
+
+# --------------------------------------------------------------------------
+# Generate HX files.
+
+def render(template_name, variables):
+    try:
+	template = env.get_template(template_name)
+    except TemplateNotFound:
+	raise TemplateNotFound(template_name)
+    content = template.render(variables)
+    return content
+
+
 def export_sandy(class_name, tvars):
 	file_name = "HXExpSandy30.hx"
 	test_file_name = "HXExpSandy30_main.hx"
@@ -135,6 +151,7 @@ def export_sandy(class_name, tvars):
 			  class_name + ".hxml",
 			  tvars)
 
+
 def save_file(file_name,class_name,output_file_name,tvars):
 	success = False
 	tvars['PACKAGE_NAME'] = as_package_name.val
@@ -154,7 +171,8 @@ def save_file(file_name,class_name,output_file_name,tvars):
 	inf.close()
 	print "Export Successful: "+reported_name
 
-def export_to_as(ob):
+
+def export_to_hx(ob):
 	me = Mesh.New()
 	me.getFromObject(ob,0)
 	
@@ -177,6 +195,17 @@ def export_to_as(ob):
 	
 	export_sandy(class_name,tvars)
 
+
+def export_list(obs):
+	for ob in obs:
+		me = Mesh.New()
+		me.getFromObject(ob,0)
+		print(me.name)
+		export_to_hx(ob)	
+
+# --------------------------------------------------------------------------
+# Generate HX files.
+
 def main(): 
 	# Saves the editmode state and go's out of  
 	# editmode if its enabled, we cant make 
@@ -196,6 +225,17 @@ def main():
 # This lets you can import the script without running it 
 if __name__ == '__main__': 
 	main() 
+
+
+
+# --------------------------------------------------------------------------
+# GUI stuff.
+
+EVENT_NOEVENT = 1
+EVENT_DRAW = 2
+EVENT_EXIT = 3
+EVENT_EXPORT = 4
+EVENT_BROWSEFILE = 5
 
 def event(evt, val):
 	if (evt == Draw.QKEY and not val):
@@ -228,11 +268,7 @@ def bevent(evt):
 			
 		# export all object names
 		try:
-			for ob in obs:
-				me = Mesh.New()
-				me.getFromObject(ob,0)
-				print(me.name)
-				export_to_as(ob)
+			export_list(obs)
 			Draw.PupMenu("Export Successful")
 		except:
 			Draw.PupMenu("Export failed | Check the console for more info")
@@ -247,20 +283,10 @@ def FileSelected(fileName):
 	global fileButton
 	
 	if fileName != '':
-		# check if file exists
-		#if sys.exists(fileName) != 1:
-		#	cutils.Debug.Debug('File(%s) does not exist' % (fileName),'ERROR')
-		#	return False
-		
 		fileButton.val = fileName
 	else:
 		cutils.Debug.Debug('ERROR: filename is empty','ERROR')
 
-
-
-######################################################
-# GUI drawing
-######################################################
 def draw():
 	global as_package_name
 	global fileButton, expFileName
@@ -285,4 +311,10 @@ def draw():
 	Draw.Button("Export",EVENT_EXPORT , 40, 20, 80, 18)
 	Draw.Button("Exit",EVENT_EXIT , 140, 20, 80, 18)
 
-Draw.Register(draw, event, bevent)
+if Blender.mode == 'interactive':
+	Draw.Register(draw, event, bevent)
+else:
+	print("Command-line mode operation, exporting all objects")
+	sce = bpy.data.scenes.active 
+	obs = [ob for ob in sce.objects if ob.type == 'Mesh']
+	export_list(obs)
