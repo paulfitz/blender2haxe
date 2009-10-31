@@ -79,7 +79,7 @@ from Blender.BGL import *
 # --------------------------------------------------------------------------
 # Store defaults in Blender
 
-reg_key = "HXExport"
+reg_key = "HXExport3"
 
 def update_registry():
     global as_package_name
@@ -122,6 +122,11 @@ update_registry()
 # --------------------------------------------------------------------------
 # Generate HX files.
 
+class HxOptions:
+	def __init__(self, output_dir, include_tests):
+		self.include_tests = include_tests
+		self.output_dir = output_dir
+
 def render(template_name, variables):
     try:
 	template = env.get_template(template_name)
@@ -131,7 +136,7 @@ def render(template_name, variables):
     return content
 
 
-def export_sandy(class_name, tvars):
+def export_sandy(class_name, tvars, options):
 	file_name = "HXExpSandy30.hx"
 	test_file_name = "HXExpSandy30_main.hx"
 	build_file_name = "HXExpSandy30_main.hxml"
@@ -139,20 +144,22 @@ def export_sandy(class_name, tvars):
 	tvars['pi'] = pi
 	tvars['TESTED_CLASS_NAME'] = class_name
 
-	save_file(file_name, class_name, None, tvars)
+	save_file(file_name, class_name, None, tvars, options)
 
-	if test_file_name and build_file_name and export_test_button.val:
+	if test_file_name and build_file_name and options.include_tests:
 		save_file(test_file_name,
 			  class_name + "Main",
 			  None,
-			  tvars)
+			  tvars,
+			  options)
 		save_file(build_file_name,
 			  class_name + "Main",
 			  class_name + ".hxml",
-			  tvars)
+			  tvars,
+			  options)
 
 
-def save_file(file_name,class_name,output_file_name,tvars):
+def save_file(file_name,class_name,output_file_name,tvars,options):
 	success = False
 	tvars['PACKAGE_NAME'] = as_package_name.val
 	tvars['CLASS_NAME'] = class_name
@@ -163,7 +170,7 @@ def save_file(file_name,class_name,output_file_name,tvars):
 	if not(output_file_name):
 		output_file_name = class_name+ext
 	reported_name = output_file_name
-	output_file_name = fileButton.val+""+output_file_name
+	output_file_name = os.path.join(options.output_dir,output_file_name)
 	out = open(output_file_name, 'w')
 	x = render(file_name,tvars)
 	out.write(x)
@@ -172,7 +179,7 @@ def save_file(file_name,class_name,output_file_name,tvars):
 	print "Export Successful: "+reported_name
 
 
-def export_to_hx(ob):
+def export_to_hx(ob,options):
 	me = Mesh.New()
 	me.getFromObject(ob,0)
 	
@@ -181,7 +188,7 @@ def export_to_hx(ob):
 	cam = None
 	cam_geom = None
 	cam_loc = [0,0,0]
-	if export_test_button.val == 1:
+	if options.include_tests == 1:
 		cams = Camera.Get()
 		if len(cams)>0:
 			cam = cams[0]
@@ -193,15 +200,15 @@ def export_to_hx(ob):
 		  'camera': cam,
 		  'camera_geom': cam_geom }
 	
-	export_sandy(class_name,tvars)
+	export_sandy(class_name,tvars,options)
 
 
-def export_list(obs):
+def export_list(obs,options):
 	for ob in obs:
 		me = Mesh.New()
 		me.getFromObject(ob,0)
 		print(me.name)
-		export_to_hx(ob)	
+		export_to_hx(ob,options)
 
 # --------------------------------------------------------------------------
 # Generate HX files.
@@ -266,9 +273,11 @@ def bevent(evt):
 			Draw.Exit()
 			return
 			
-		# export all object names
+		# export all object 
 		try:
-			export_list(obs)
+			options = HxOptions(fileButton.val,
+					    export_test_button.val)
+			export_list(obs,options)
 			Draw.PupMenu("Export Successful")
 		except:
 			Draw.PupMenu("Export failed | Check the console for more info")
@@ -317,4 +326,4 @@ else:
 	print("Command-line mode operation, exporting all objects")
 	sce = bpy.data.scenes.active 
 	obs = [ob for ob in sce.objects if ob.type == 'Mesh']
-	export_list(obs)
+	export_list(obs,HxOptions("",True))
