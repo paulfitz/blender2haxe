@@ -1,5 +1,5 @@
-package %PACKAGE_NAME%;
-import %TESTED_CLASS_NAME%;
+package {{PACKAGE_NAME}};
+import {{TESTED_CLASS_NAME}};
 
 import sandy.core.Scene3D;
 import sandy.core.scenegraph.Camera3D;
@@ -23,50 +23,35 @@ import flash.display.BitmapData;
 
 //class Texture extends BitmapData { public function new() { super(1,1); } } 
 
-class %CLASS_NAME% extends Sprite {
+class {{CLASS_NAME}} extends Sprite {
     private var scene: Scene3D;
     private var camera: Camera3D;
     private var shape: Shape3D;
     
     public function new () {
-	    super();
-	    loadShape();
-	}
-
+        super();
+        loadShape();
+    }
+	
     public function loadShape() {
-        camera = new Camera3D( 0, 0, -8);
-        camera.viewport = new ViewPort(400, 300);
-	camera.lookAt(0,160,0);
-	camera.y = -160;
-
-	var cx: Float;
-	var cy: Float;
-	var cz: Float;
-	var crotateX: Float;
-	var crotateY: Float;
-	var crotateZ: Float;
-	var cscaleX: Float;
-	var cscaleY: Float;
-	var cscaleZ: Float;
-
-	%CAMERA_TRANSFORM%
-
 	camera = new Camera3D(0,0,45,0.1);
         camera.viewport = new ViewPort(400, 300);
 	camera.x = 0;
 	camera.y = 0;
 	camera.z = -10;
-	camera.lookAt(0,0,0); // look in standard Blender direction
+	camera.lookAt(0,0,0); // look in standard direction
 	camera.z = 0;
-	camera.rotateX = crotateX-90.0;
-	camera.rotateZ = -crotateZ;
-	camera.rotateY = crotateY;
-	camera.x = cx;
-	camera.y = cy;
-	camera.z = cz;
-	camera.scaleX = cscaleX;
-	camera.scaleY = cscaleY;
-	camera.scaleZ = cscaleZ;
+	// rotations not working yet
+	//camera.rotateX = {{camera_geom.RotX * (180/pi)}}-90.0;
+	//camera.rotateZ = -({{camera_geom.RotY * (180/pi)}});
+	//camera.rotateY = {{camera_geom.RotZ * (180/pi)}};
+	//camera.x = {{camera_geom.LocX}};
+	//camera.z = {{camera_geom.LocZ}};
+	//camera.y = {{camera_geom.LocY}};
+	camera.z = -10;
+	camera.scaleX = {{camera_geom.SizeX}};
+	camera.scaleY = {{camera_geom.SizeZ}};
+	camera.scaleZ = {{camera_geom.SizeY}};
 
 	var root:Group = createScene();
         scene = new Scene3D("scene", this, camera, root);
@@ -78,7 +63,7 @@ class %CLASS_NAME% extends Sprite {
     
     public function createScene():Group {
 	var g:Group = new Group();
-	shape = new %TESTED_CLASS_NAME%();
+	shape = new {{TESTED_CLASS_NAME}}();
         shape.enableBackFaceCulling = false;
 
 	/*
@@ -99,7 +84,7 @@ class %CLASS_NAME% extends Sprite {
     
     static function main() {
 	//haxe.Firebug.redirectTraces();
-        new %CLASS_NAME%();
+        new {{CLASS_NAME}}();
     }
     
 }

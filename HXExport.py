@@ -38,15 +38,35 @@ __bpydoc__ = """
 Based on AS3Export by Dennis Ippel.
 """
 
- 
+# Import jinja2 for templates.
+# Not sure exactly how best to do this in a Blender python script.
+# Even just finding the current path was a little dicey, __file__ is
+# not available.
+import os
+import sys
+import inspect
+def get_path():
+    return os.path.dirname(inspect.currentframe().f_code.co_filename)
+sys.path.append(get_path())
+from jinja2 import Environment, FileSystemLoader, TemplateNotFound
+template_dirs = []
+template_dirs.append(get_path()+"/"+ "template")
+env = Environment(loader = FileSystemLoader(template_dirs))
+
+def render(template_name, variables):
+    try:
+	template = env.get_template(template_name)
+    except TemplateNotFound:
+	raise TemplateNotFound(template_name)
+    content = template.render(variables)
+    return content
+
 from Blender import Scene, Mesh, Window, Get, sys, Image, Draw
 from Blender import Registry, Camera, Object
 import Blender
 import BPyMessages 
 import bpy 
 import math
-import os
-import inspect
 from math import *
 from Blender.BGL import *
 
@@ -95,90 +115,67 @@ export_all_button = Draw.Create(export_all)
 export_test_button = Draw.Create(export_test)
 update_registry()
 
-def get_path():
-    return os.path.dirname(inspect.currentframe().f_code.co_filename)
-
-def export_sandy(me, class_name):
+def export_sandy(class_name, tvars):
 	file_name = "HXExpSandy30.hx"
 	test_file_name = "HXExpSandy30_main.hx"
 	build_file_name = "HXExpSandy30_main.hxml"
 
-	data_loop = ""
-	transform_props = ""
-	
-	for v in me.verts: 
-		data_loop += "\t\t\tv(%f,%f,%f);\n" % (v.co.x, v.co.y, v.co.z)
-	data_loop += "\n"
-	
-	for f in me.faces:
-		if me.faceUV:
-			if len(f.uv) < 4:
-				data_loop += "\t\t\tf(%i,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f);\n" % (f.verts[0].index,f.verts[1].index, f.verts[2].index, f.uv[0][0], f.uv[0][1],f.uv[1][0], f.uv[1][1], f.uv[2][0], f.uv[2][1], f.no.x, f.no.y, f.no.z)
-			else:
-				data_loop += "\t\t\tf4(%i,%i,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f);\n" % (f.verts[0].index, f.verts[1].index, f.verts[2].index, f.verts[3].index, f.uv[0][0], f.uv[0][1], f.uv[1][0], f.uv[1][1], f.uv[2][0], f.uv[2][1], f.uv[3][0], f.uv[3][1], f.no.x, f.no.y, f.no.z)
-		if not me.faceUV:
-			if len(f.verts) < 4:
-				data_loop += "\t\t\tf2(%i,%i,%i);\n" % (f.verts[0].index, f.verts[1].index, f.verts[2].index)
-			else:
-				data_loop += "\t\t\tf24(%i,%i,%i,%i);\n" % (f.verts[0].index, f.verts[1].index, f.verts[2].index, f.verts[3].index)	
-	
-	transform_props += "\n\t\t\trotateX = %f; rotateZ = %f; rotateY = %f;\n" % (ob_rotX, ob_rotY, ob_rotZ)
-	transform_props += "\n\t\t\tscaleX = %f; scaleZ = %f; scaleY = %f;\n" % (ob_scaleX, ob_scaleY, ob_scaleZ)
-	transform_props += "\n\t\t\tx = %f; z = %f; y = %f;\n" % (ob_locX, ob_locY, ob_locZ)
+	tvars['pi'] = pi
+	tvars['TESTED_CLASS_NAME'] = class_name
 
-	save_file(file_name, class_name, data_loop, transform_props)
+	save_file(file_name, class_name, None, tvars)
+
 	if test_file_name and build_file_name and export_test_button.val:
-		ctransform_props = ""
-		ctransform_props += "\n\t\t\tcrotateX = %f; crotateZ = %f; crotateY = %f;\n" % (cam_rotX, cam_rotY, cam_rotZ)
-		ctransform_props += "\n\t\t\tcscaleX = %f; cscaleZ = %f; cscaleY = %f;\n" % (cam_scaleX, cam_scaleY, cam_scaleZ)
-		ctransform_props += "\n\t\t\tcx = %f; cz = %f; cy = %f;\n" % (cam_locX, cam_locY, cam_locZ)
+		save_file(test_file_name,
+			  class_name + "Main",
+			  None,
+			  tvars)
+		save_file(build_file_name,
+			  class_name + "Main",
+			  class_name + ".hxml",
+			  tvars)
 
-		save_file_ext(test_file_name,
-			      class_name + "Main",
-			      None,
-			      {'TESTED_CLASS_NAME': class_name,
-			       'CAMERA_TRANSFORM': ctransform_props})
-		save_file_ext(build_file_name,
-			      class_name + "Main",
-			      class_name + ".hxml",
-			      {'TESTED_CLASS_NAME': class_name})
-
-
-def save_file(file_name, class_name, data_loop, transform_props):
-	tvars = {
-		'DATA_LOOP': data_loop,
-		'TRANSFORM_PROPS': transform_props,
-		}
-	save_file_ext(file_name,class_name,None,tvars)
-
-def save_file_ext(file_name,class_name,output_file_name,tvars):
+def save_file(file_name,class_name,output_file_name,tvars):
+	success = False
 	tvars['PACKAGE_NAME'] = as_package_name.val
 	tvars['CLASS_NAME'] = class_name
-	try:
-		inf = open(get_path()+sys.sep+ "wrappers" +sys.sep+ file_name, "r")
-			
-		ext = ".hx"
-		if not(output_file_name):
-			output_file_name = class_name+ext
-		reported_name = output_file_name
-		output_file_name = fileButton.val+""+output_file_name
-		out = open(output_file_name, 'w')
-		try:
-			lines = inf.readlines()
-			for line in lines:
-				for k in tvars:
-					line = line.replace("%" + k + "%", str(tvars[k]))
-				out.write(line)
-		finally:
-			out.close()
-			inf.close()
-			print "Export Successful: "+reported_name
-	except:
-		Draw.PupMenu("Export failed | Check the console for more info")
-		raise # throw the exception
-
-	Draw.Exit()
+	template_name = get_path()+sys.sep+ "template" +sys.sep+ file_name
+	inf = open(template_name, "r")
 	
+	ext = ".hx"
+	if not(output_file_name):
+		output_file_name = class_name+ext
+	reported_name = output_file_name
+	output_file_name = fileButton.val+""+output_file_name
+	out = open(output_file_name, 'w')
+	x = render(file_name,tvars)
+	out.write(x)
+	out.close()
+	inf.close()
+	print "Export Successful: "+reported_name
+
+def export_to_as(ob):
+	me = Mesh.New()
+	me.getFromObject(ob,0)
+	
+	class_name = ob.name.replace(".","").replace("-","")
+
+	cam = None
+	cam_geom = None
+	cam_loc = [0,0,0]
+	if export_test_button.val == 1:
+		cams = Camera.Get()
+		if len(cams)>0:
+			cam = cams[0]
+			cam_geom = Object.Get(cam.name)
+			print("Using camera: " + cam.name)
+
+	tvars = { 'mesh': me,
+		  'object': ob,
+		  'camera': cam,
+		  'camera_geom': cam_geom }
+	
+	export_sandy(class_name,tvars)
 
 def main(): 
 	# Saves the editmode state and go's out of  
@@ -230,62 +227,21 @@ def bevent(evt):
 			return
 			
 		# export all object names
-		for ob in obs:
-			me = Mesh.New()
-			me.getFromObject(ob,0)
-			print(me.name)
-			export_to_as(ob)
-		
-		Draw.PupMenu("Export Successful")
+		try:
+			for ob in obs:
+				me = Mesh.New()
+				me.getFromObject(ob,0)
+				print(me.name)
+				export_to_as(ob)
+			Draw.PupMenu("Export Successful")
+		except:
+			Draw.PupMenu("Export failed | Check the console for more info")
+		Draw.Exit()
 
 	elif (evt== EVENT_BROWSEFILE):
 		Window.FileSelector(FileSelected,"Export .as", expFileName)
 		Draw.Redraw(1)
 
-def export_to_as(ob):
-	me = Mesh.New()
-	me.getFromObject(ob,0)
-	
-	class_name = ob.name.replace(".", "")
-	
-	#get transformations
-	global ob_locX, ob_locY, ob_locZ, ob_mtrx, ob_rotX, ob_rotY, ob_rotZ, ob_scaleX, ob_scaleY, ob_scaleZ
-	ob_locX = ob.LocX
-	ob_locY = ob.LocY
-	ob_locZ = ob.LocZ
-	ob_mtrx = ob.matrix.rotationPart()
-	ob_rotX = ob.RotX * (180 / pi)
-	ob_rotY = ob.RotY * (180 / pi)
-	ob_rotZ = ob.RotZ * (180 / pi)
-	ob_scaleX = ob.SizeX
-	ob_scaleY = ob.SizeY
-	ob_scaleZ = ob.SizeZ
-
-
-	cam_loc = [0,0,0]
-	if export_test_button.val == 1:
-		cams = Camera.Get()
-		if len(cams)>0:
-			cam = cams[0]
-			cam_obj = Object.Get(cam.name)
-			print("Using camera: " + cam.name)
-			cam_loc = cam_obj.getLocation('worldspace')
-			print("Location: " + str(cam_loc))
-			cam_euler = cam_obj.getEuler('worldspace')
-			print("Euler: " + str(cam_euler))
-			global cam_locX, cam_locY, cam_locZ, cam_mtrx, cam_rotX, cam_rotY, cam_rotZ, cam_scaleX, cam_scaleY, cam_scaleZ
-			cam_locX = cam_obj.LocX
-			cam_locY = cam_obj.LocY
-			cam_locZ = cam_obj.LocZ
-			cam_mtrx = cam_obj.matrix.rotationPart()
-			cam_rotX = cam_obj.RotX * (180 / pi)
-			cam_rotY = cam_obj.RotY * (180 / pi)
-			cam_rotZ = cam_obj.RotZ * (180 / pi)
-			cam_scaleX = cam_obj.SizeX
-			cam_scaleY = cam_obj.SizeY
-			cam_scaleZ = cam_obj.SizeZ
-	
-	export_sandy(me, class_name)
 		
 def FileSelected(fileName):
 	global fileButton
@@ -299,6 +255,8 @@ def FileSelected(fileName):
 		fileButton.val = fileName
 	else:
 		cutils.Debug.Debug('ERROR: filename is empty','ERROR')
+
+
 
 ######################################################
 # GUI drawing

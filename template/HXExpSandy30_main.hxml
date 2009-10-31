@@ -1,0 +1,5 @@
+-swf-header 400:300:30:ffffff
+-swf9 {{TESTED_CLASS_NAME}}.swf
+-lib sandy
+-main {{CLASS_NAME}}
+

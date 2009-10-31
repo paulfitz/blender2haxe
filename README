@@ -1,6 +1,6 @@
 
 This is to play around with exporting Blender models to Haxe.
 
-Code from Dennis at:
+Based on code from Dennis Ippel at:
   http://www.rozengain.com/blog/2008/01/02/export-your-blender-objects-straight-to-away3d-papervision3d-and-sandy/
 used under the GPL.
