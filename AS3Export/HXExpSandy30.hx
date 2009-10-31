@@ -18,7 +18,7 @@ class %CLASS_NAME% extends Shape3D, implements Primitive3D {
 
 			l.setFaceVertexIds(l.getNextFaceID(), [v1,v2,v3]);
 			l.setFaceUVCoordsIds(l.getNextFaceUVCoordID(), [uv1,uv2,uv3]);
-			l.setFaceNormal(l.getNextFaceNormalID(), normX,normY,normZ);
+			l.setFaceNormal(l.getNextFaceNormalID(), normX,normZ,normY);
 		}
 
 		private function f4(v1:Int,v2:Int,v3:Int,v4:Int,uv00:Float,uv01:Float,uv10:Float,uv11:Float,uv20:Float,uv21:Float,uv30:Float,uv31:Float,normX:Float,normY:Float,normZ:Float):Void {
@@ -46,7 +46,7 @@ class %CLASS_NAME% extends Shape3D, implements Primitive3D {
 		}
 
 		private function v(vx:Float,vy:Float,vz:Float):Void {
-			l.setVertex(l.getNextVertexID(),vx,vy,vz);
+			l.setVertex(l.getNextVertexID(),vx,vz,vy);
 		}
 
 		public function new( p_Name:String=null ) {

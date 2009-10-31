@@ -41,7 +41,7 @@ http://www.rozengain.com
 
 #triangulate: go into edit mode, select all faces and press ctrl+t
  
-from Blender import Scene, Mesh, Window, Get, sys, Image, Draw, Registry
+from Blender import Scene, Mesh, Window, Get, sys, Image, Draw, Registry, Camera, Object
 import Blender
 import BPyMessages 
 import bpy 
@@ -276,16 +276,22 @@ def export_sandy(me, class_name, is_haxe):
 			else:
 				data_loop += "\t\t\tf24(%i,%i,%i,%i);\n" % (f.verts[0].index, f.verts[1].index, f.verts[2].index, f.verts[3].index)	
 	
-	transform_props += "\n\t\t\tx = %f; y = %f; z = %f;\n" % (ob_locX, ob_locY, ob_locZ)
-	transform_props += "\n\t\t\trotateX = %f; rotateY = %f; rotateZ = %f;\n" % (ob_rotX, ob_rotY, ob_rotZ)
-	transform_props += "\n\t\t\tscaleX = %f; scaleY = %f; scaleZ = %f;\n" % (ob_scaleX, ob_scaleY, ob_scaleZ)
+	transform_props += "\n\t\t\trotateX = %f; rotateZ = %f; rotateY = %f;\n" % (ob_rotX, ob_rotY, ob_rotZ)
+	transform_props += "\n\t\t\tscaleX = %f; scaleZ = %f; scaleY = %f;\n" % (ob_scaleX, ob_scaleY, ob_scaleZ)
+	transform_props += "\n\t\t\tx = %f; z = %f; y = %f;\n" % (ob_locX, ob_locY, ob_locZ)
 
 	save_file(file_name, class_name, data_loop, transform_props, is_haxe)
 	if test_file_name and build_file_name and export_test_button.val:
+		ctransform_props = ""
+		ctransform_props += "\n\t\t\tcrotateX = %f; crotateZ = %f; crotateY = %f;\n" % (cam_rotX, cam_rotY, cam_rotZ)
+		ctransform_props += "\n\t\t\tcscaleX = %f; cscaleZ = %f; cscaleY = %f;\n" % (cam_scaleX, cam_scaleY, cam_scaleZ)
+		ctransform_props += "\n\t\t\tcx = %f; cz = %f; cy = %f;\n" % (cam_locX, cam_locY, cam_locZ)
+
 		save_file_ext(test_file_name,
 			      class_name + "Main",
 			      None,
-			      {'TESTED_CLASS_NAME': class_name},
+			      {'TESTED_CLASS_NAME': class_name,
+			       'CAMERA_TRANSFORM': ctransform_props},
 			      is_haxe)
 		save_file_ext(build_file_name,
 			      class_name + "Main",
@@ -446,7 +452,31 @@ def export_to_as(ob):
 	ob_rotZ = ob.RotZ * (180 / pi)
 	ob_scaleX = ob.SizeX
 	ob_scaleY = ob.SizeY
-	ob_scaleZ = ob.SizeZ	
+	ob_scaleZ = ob.SizeZ
+
+
+	cam_loc = [0,0,0]
+	if export_test_button.val == 1:
+		cams = Camera.Get()
+		if len(cams)>0:
+			cam = cams[0]
+			cam_obj = Object.Get(cam.name)
+			print("Using camera: " + cam.name)
+			cam_loc = cam_obj.getLocation('worldspace')
+			print("Location: " + str(cam_loc))
+			cam_euler = cam_obj.getEuler('worldspace')
+			print("Euler: " + str(cam_euler))
+			global cam_locX, cam_locY, cam_locZ, cam_mtrx, cam_rotX, cam_rotY, cam_rotZ, cam_scaleX, cam_scaleY, cam_scaleZ
+			cam_locX = cam_obj.LocX
+			cam_locY = cam_obj.LocY
+			cam_locZ = cam_obj.LocZ
+			cam_mtrx = cam_obj.matrix.rotationPart()
+			cam_rotX = cam_obj.RotX * (180 / pi)
+			cam_rotY = cam_obj.RotY * (180 / pi)
+			cam_rotZ = cam_obj.RotZ * (180 / pi)
+			cam_scaleX = cam_obj.SizeX
+			cam_scaleY = cam_obj.SizeY
+			cam_scaleZ = cam_obj.SizeZ
 	
 	if (engine_menu.val == 2):
 		export_papervision(me, class_name) 

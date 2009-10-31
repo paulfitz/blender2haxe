@@ -39,6 +39,35 @@ class %CLASS_NAME% extends Sprite {
 	camera.lookAt(0,160,0);
 	camera.y = -160;
 
+	var cx: Float;
+	var cy: Float;
+	var cz: Float;
+	var crotateX: Float;
+	var crotateY: Float;
+	var crotateZ: Float;
+	var cscaleX: Float;
+	var cscaleY: Float;
+	var cscaleZ: Float;
+
+	%CAMERA_TRANSFORM%
+
+	camera = new Camera3D(0,0,45,0.1);
+        camera.viewport = new ViewPort(400, 300);
+	camera.x = 0;
+	camera.y = 0;
+	camera.z = -10;
+	camera.lookAt(0,0,0); // look in standard Blender direction
+	camera.z = 0;
+	camera.rotateX = crotateX-90.0;
+	camera.rotateZ = -crotateZ;
+	camera.rotateY = crotateY;
+	camera.x = cx;
+	camera.y = cy;
+	camera.z = cz;
+	camera.scaleX = cscaleX;
+	camera.scaleY = cscaleY;
+	camera.scaleZ = cscaleZ;
+
 	var root:Group = createScene();
         scene = new Scene3D("scene", this, camera, root);
 	Lib.current.stage.addEventListener(Event.ENTER_FRAME, 
@@ -50,7 +79,7 @@ class %CLASS_NAME% extends Sprite {
     public function createScene():Group {
 	var g:Group = new Group();
 	shape = new %TESTED_CLASS_NAME%();
-        shape.enableBackFaceCulling = true;
+        shape.enableBackFaceCulling = false;
 
 	/*
 	  var bmp = new BitmapMaterial(new Texture());
@@ -64,7 +93,7 @@ class %CLASS_NAME% extends Sprite {
 
     public function enterFrameHandler( ?event : Event ) : Void {
         scene.render();
-	shape.rotateX += 1;
+	//shape.rotateX += 1;
     }
     
     
