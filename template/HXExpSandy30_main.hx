@@ -36,35 +36,35 @@ class {{CLASS_NAME}} extends Sprite {
     }
 	
     public function loadShape() {
-	camera = new Camera3D(0,0,45,0.1);
+        camera = new Camera3D(0,0,45,0.1);
         camera.viewport = new ViewPort(400, 300);
-	camera.x = 0;
-	camera.y = 0;
-	camera.z = 0;
-	// rotations not working yet
-	camera.rotateX = -{{camera_geom.RotX * (180/pi)}}+90; //blender diff
-	camera.rotateZ = -({{camera_geom.RotY * (180/pi)}});
-	camera.rotateY = {{camera_geom.RotZ * (180/pi)}};
-	camera.x = {{camera_geom.LocX}};
-	camera.z = {{camera_geom.LocY}};
-	camera.y = {{camera_geom.LocZ}};
-	//camera.z = -10;
-	camera.scaleX = {{camera_geom.SizeX}};
-	camera.scaleZ = {{camera_geom.SizeY}};
-	camera.scaleY = {{camera_geom.SizeZ}};
-
-	var root:Group = createScene();
+        camera.x = 0;
+        camera.y = 0;
+        camera.z = 0;
+        // rotations not working yet
+        camera.rotateX = -{{camera_geom.RotX * (180/pi)}}+90; //blender diff
+        camera.rotateZ = -({{camera_geom.RotY * (180/pi)}});
+        camera.rotateY = {{camera_geom.RotZ * (180/pi)}};
+        camera.x = {{camera_geom.LocX}};
+        camera.z = {{camera_geom.LocY}};
+        camera.y = {{camera_geom.LocZ}};
+        //camera.z = -10;
+        camera.scaleX = {{camera_geom.SizeX}};
+        camera.scaleZ = {{camera_geom.SizeY}};
+        camera.scaleY = {{camera_geom.SizeZ}};
+        
+        var root:Group = createScene();
         scene = new Scene3D("scene", this, camera, root);
-	Lib.current.stage.addEventListener(Event.ENTER_FRAME, 
-					   enterFrameHandler);
+        Lib.current.stage.addEventListener(Event.ENTER_FRAME, 
+                                           enterFrameHandler);
         Lib.current.addChild(this);
     }
     
     
     public function createScene():Group {
-	var g:Group = new Group();
-	shape = new {{TESTED_CLASS_NAME}}();
-        shape.enableBackFaceCulling = false;
+        var g:Group = new Group();
+        shape = new {{TESTED_CLASS_NAME}}();
+        shape.enableBackFaceCulling = true;
 
 	/*
 	  var bmp = new BitmapMaterial(new Texture());
@@ -72,18 +72,18 @@ class {{CLASS_NAME}} extends Sprite {
 	}
 	*/
 	
-	g.addChild(shape);
-	return g;
+        g.addChild(shape);
+        return g;
     }
 
     public function enterFrameHandler( ?event : Event ) : Void {
         scene.render();
-	//shape.rotateX += 1;
+        //shape.rotateX += 1;
     }
     
     
     static function main() {
-	//haxe.Firebug.redirectTraces();
+        //haxe.Firebug.redirectTraces();
         new {{CLASS_NAME}}();
     }
     
