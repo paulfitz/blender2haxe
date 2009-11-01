@@ -1,3 +1,5 @@
+// -*- mode:java; tab-width:4; c-basic-offset:4; indent-tabs-mode:nil -*-
+
 package {{PACKAGE_NAME}};
 import {{TESTED_CLASS_NAME}};
 
@@ -38,20 +40,18 @@ class {{CLASS_NAME}} extends Sprite {
         camera.viewport = new ViewPort(400, 300);
 	camera.x = 0;
 	camera.y = 0;
-	camera.z = -10;
-	camera.lookAt(0,0,0); // look in standard direction
 	camera.z = 0;
 	// rotations not working yet
-	//camera.rotateX = {{camera_geom.RotX * (180/pi)}}-90.0;
-	//camera.rotateZ = -({{camera_geom.RotY * (180/pi)}});
-	//camera.rotateY = {{camera_geom.RotZ * (180/pi)}};
-	//camera.x = {{camera_geom.LocX}};
-	//camera.z = {{camera_geom.LocZ}};
-	//camera.y = {{camera_geom.LocY}};
-	camera.z = -10;
+	camera.rotateX = -{{camera_geom.RotX * (180/pi)}}+90; //blender diff
+	camera.rotateZ = -({{camera_geom.RotY * (180/pi)}});
+	camera.rotateY = {{camera_geom.RotZ * (180/pi)}};
+	camera.x = {{camera_geom.LocX}};
+	camera.z = {{camera_geom.LocY}};
+	camera.y = {{camera_geom.LocZ}};
+	//camera.z = -10;
 	camera.scaleX = {{camera_geom.SizeX}};
-	camera.scaleY = {{camera_geom.SizeZ}};
 	camera.scaleZ = {{camera_geom.SizeY}};
+	camera.scaleY = {{camera_geom.SizeZ}};
 
 	var root:Group = createScene();
         scene = new Scene3D("scene", this, camera, root);
