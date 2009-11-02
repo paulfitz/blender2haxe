@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+	
+<movie width="640" height="480" framerate="60">
+  <library>
+    <bitmap id="{{TESTED_CLASS_NAME}}Skin" name="{{TESTED_CLASS_NAME}}Skin" import="{{TESTED_CLASS_NAME}}.png" />
+  </library>
+  <frame>
+  </frame>
+</movie>

@@ -47,9 +47,8 @@ Based on AS3Export by Dennis Ippel.
 # Imports.
 #
 # Import jinja2 for templates.
-# Not sure exactly how best to do this in a Blender python script.
-# Even just finding the current path was a little dicey, __file__ is
-# not available.
+# Finding the current path was a little dicey, __file__ is not available
+# when used within the GUI.
 import os
 import sys
 def get_path():
@@ -140,6 +139,8 @@ def export_sandy(class_name, tvars, options):
 	file_name = "HXExpSandy30.hx"
 	test_file_name = "HXExpSandy30_main.hx"
 	build_file_name = "HXExpSandy30_main.hxml"
+	make_file_name = "HXExpSandy30_Makefile"
+	res_file_name = "HXExpSandy30.xml"
 
 	tvars['pi'] = pi
 	tvars['TESTED_CLASS_NAME'] = class_name
@@ -157,7 +158,17 @@ def export_sandy(class_name, tvars, options):
 			  class_name + ".hxml",
 			  tvars,
 			  options)
-
+		save_file(make_file_name,
+			  class_name + "Main",
+			  class_name + "_Makefile",
+			  tvars,
+			  options)
+                if 'HAS_TEXTURE' in tvars:
+                    save_file(res_file_name,
+                              class_name + "Main",
+                              class_name + "Skin.xml",
+                              tvars,
+                              options)
 
 def save_file(file_name,class_name,output_file_name,tvars,options):
 	success = False
@@ -176,7 +187,7 @@ def save_file(file_name,class_name,output_file_name,tvars,options):
 	out.write(x)
 	out.close()
 	inf.close()
-	print "Export Successful: "+reported_name
+	print "= Export Successful: "+reported_name
 
 
 def export_to_hx(ob,options):
@@ -193,21 +204,53 @@ def export_to_hx(ob,options):
 		if len(cams)>0:
 			cam = cams[0]
 			cam_geom = Object.Get(cam.name)
-			print("Using camera: " + cam.name)
+			print("= Using camera: " + cam.name)
 
 	tvars = { 'mesh': me,
 		  'object': ob,
 		  'camera': cam,
 		  'camera_geom': cam_geom }
 	
+        images = dict()
+        if me.faceUV:
+            for f in me.faces:
+                if f.image!=None:
+                    images[f.image.getName()] = 1
+        images = images.keys()
+        if len(images)>0:
+            if len(images)>1:
+                print("= Too many images on object")
+            else:
+                # perfect, one image, we can deal with that
+                img = Blender.Image.Get(images[0])
+                print("= Processing image "+img.filename)
+                file_base = os.path.join(options.output_dir,class_name)
+                img.filename = file_base + ".unknown.format"
+                img.save()
+                import ImageFile
+                fp = open(img.filename, "rb")
+                p = ImageFile.Parser()
+                while True:
+                    s = fp.read(1024)
+                    if not s:
+                        break
+                    p.feed(s)
+                im = p.close()
+                im.save(file_base + ".png")
+                print("= Saved converted image to " + file_base + ".png")
+                os.remove(img.filename)
+                tvars['HAS_TEXTURE'] = True
+
 	export_sandy(class_name,tvars,options)
 
+                
 
 def export_list(obs,options):
 	for ob in obs:
 		me = Mesh.New()
 		me.getFromObject(ob,0)
-		print(me.name)
+		print("================================================")
+		print("= Working on object " + ob.name)
 		export_to_hx(ob,options)
 
 # --------------------------------------------------------------------------

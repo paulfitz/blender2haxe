@@ -23,7 +23,11 @@ import sandy.materials.Appearance;
 import sandy.materials.BitmapMaterial;
 import flash.display.BitmapData;
 
-//class Texture extends BitmapData { public function new() { super(1,1); } } 
+{% if HAS_TEXTURE %}
+class {{TESTED_CLASS_NAME}}Skin extends BitmapData { 
+    public function new() { super(1,1); } 
+} 
+{% endif %}
 
 class {{CLASS_NAME}} extends Sprite {
     private var scene: Scene3D;
@@ -41,14 +45,12 @@ class {{CLASS_NAME}} extends Sprite {
         camera.x = 0;
         camera.y = 0;
         camera.z = 0;
-        // rotations not working yet
-        camera.rotateX = -{{camera_geom.RotX * (180/pi)}}+90; //blender diff
+        camera.rotateX = -{{camera_geom.RotX * (180/pi)}}+90;
         camera.rotateZ = -({{camera_geom.RotY * (180/pi)}});
         camera.rotateY = {{camera_geom.RotZ * (180/pi)}};
         camera.x = {{camera_geom.LocX}};
         camera.z = {{camera_geom.LocY}};
         camera.y = {{camera_geom.LocZ}};
-        //camera.z = -10;
         camera.scaleX = {{camera_geom.SizeX}};
         camera.scaleZ = {{camera_geom.SizeY}};
         camera.scaleY = {{camera_geom.SizeZ}};
@@ -66,11 +68,10 @@ class {{CLASS_NAME}} extends Sprite {
         shape = new {{TESTED_CLASS_NAME}}();
         shape.enableBackFaceCulling = true;
 
-	/*
-	  var bmp = new BitmapMaterial(new Texture());
-	  shape.appearance = new Appearance(bmp);
-	}
-	*/
+        {% if HAS_TEXTURE %}
+        var bmp = new BitmapMaterial(new {{TESTED_CLASS_NAME}}Skin());
+        shape.appearance = new Appearance(bmp);
+        {% endif %}
 	
         g.addChild(shape);
         return g;

@@ -1,5 +1,8 @@
 -swf-header 400:300:30:ffffff
 -swf9 {{TESTED_CLASS_NAME}}.swf
+{% if HAS_TEXTURE -%}
+-swf-lib {{TESTED_CLASS_NAME}}Skin.swf
+{%- endif %}
 -lib sandy
 -main {{CLASS_NAME}}
 
