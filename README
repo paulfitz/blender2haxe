@@ -4,3 +4,21 @@ This is to play around with exporting Blender models to Haxe.
 Based on code from Dennis Ippel at:
   http://www.rozengain.com/blog/2008/01/02/export-your-blender-objects-straight-to-away3d-papervision3d-and-sandy/
 used under the GPL.
+
+=======================================================================
+
+Features:
+
+* Works from export menu, or from command line.
+
+* Can export test code to visualize the exported model.  The camera in
+  Flash is placed as it is in Blender.
+
+* For objects with a single UV image, that image will be automatically
+  exported and used.
+
+* Generates haxe project files (hxml) and example makefiles for Unix
+  users.
+
+
+
