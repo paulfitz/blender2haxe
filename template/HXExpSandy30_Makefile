@@ -5,12 +5,22 @@
 %.swf: %.hxml
 	haxe $<
 
-{% if HAS_TEXTURE %}
+default: {{TESTED_CLASS_NAME}}.swf
+
+{{TESTED_CLASS_NAME}}.swf: {{TESTED_CLASS_NAME}}.hx
+{{TESTED_CLASS_NAME}}.swf: {{CLASS_NAME}}.hx
+
+{% if HAS_TEXTURE -%}
 %.swf: %.xml
 	swfmill simple $< $@
 {{TESTED_CLASS_NAME}}.swf: {{TESTED_CLASS_NAME}}Skin.swf
-{% endif %}
+{{TESTED_CLASS_NAME}}Skin.swf: {{TESTED_CLASS_NAME}}.png
+{%- endif %}
 
-default: {{TESTED_CLASS_NAME}}.swf
+clean:
+	rm -f {{TESTED_CLASS_NAME}}.swf {{CLASS_NAME}}.swf
+{% if HAS_TEXTURE -%}
+	rm -f {{TESTED_CLASS_NAME}}Skin.swf
+{%- endif %}
 
 # Done!

@@ -79,7 +79,7 @@ class {{CLASS_NAME}} extends Sprite {
 
     public function enterFrameHandler( ?event : Event ) : Void {
         scene.render();
-        //shape.rotateX += 1;
+        shape.rotateY += 1;
     }
     
     
