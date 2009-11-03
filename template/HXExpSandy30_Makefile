@@ -13,14 +13,14 @@ default: {{TESTED_CLASS_NAME}}.swf
 {% if HAS_TEXTURE -%}
 %.swf: %.xml
 	swfmill simple $< $@
+
 {{TESTED_CLASS_NAME}}.swf: {{TESTED_CLASS_NAME}}Skin.swf
 {{TESTED_CLASS_NAME}}Skin.swf: {{TESTED_CLASS_NAME}}.png
 {%- endif %}
 
 clean:
 	rm -f {{TESTED_CLASS_NAME}}.swf {{CLASS_NAME}}.swf
-{% if HAS_TEXTURE -%}
-	rm -f {{TESTED_CLASS_NAME}}Skin.swf
+{% if HAS_TEXTURE %}	rm -f {{TESTED_CLASS_NAME}}Skin.swf
 {%- endif %}
 
 # Done!

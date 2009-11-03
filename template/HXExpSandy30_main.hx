@@ -66,7 +66,7 @@ class {{CLASS_NAME}} extends Sprite {
     public function createScene():Group {
         var g:Group = new Group();
         shape = new {{TESTED_CLASS_NAME}}();
-        shape.enableBackFaceCulling = true;
+        shape.enableBackFaceCulling = false;
 
         {% if HAS_TEXTURE %}
         var bmp = new BitmapMaterial(new {{TESTED_CLASS_NAME}}Skin());

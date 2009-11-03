@@ -52,12 +52,14 @@ Based on AS3Export by Dennis Ippel.
 import os
 import sys
 def get_path():
-    try:
-        p = os.path.dirname(__file__)
-    except:
-        import inspect
-        p = os.path.dirname(inspect.currentframe().f_code.co_filename)
-    p = os.path.abspath(p)
+    import inspect
+    f = inspect.currentframe().f_code.co_filename
+    p = os.path.abspath(os.path.dirname(f))
+    f = os.path.join(p,f)
+    if not(os.path.isfile(f)):
+        import blender2haxe
+        f = inspect.getfile(blender2haxe)
+        p = os.path.abspath(os.path.dirname(f))
     return p
 sys.path.append(get_path())
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
@@ -189,6 +191,21 @@ def save_file(file_name,class_name,output_file_name,tvars,options):
 	inf.close()
 	print "= Export Successful: "+reported_name
 
+def convert_image(src,dest):
+        try:
+            import ImageFile
+            fp = open(img.filename, "rb")
+            p = ImageFile.Parser()
+            while True:
+                s = fp.read(1024)
+                if not s:
+                    break
+                p.feed(s)
+            im = p.close()
+            im.save(file_base + ".png")
+        except:
+            import subprocess
+            subprocess.call(['convert', src, dest])
 
 def export_to_hx(ob,options):
 	me = Mesh.New()
@@ -224,19 +241,11 @@ def export_to_hx(ob,options):
                 # perfect, one image, we can deal with that
                 img = Blender.Image.Get(images[0])
                 print("= Processing image "+img.filename)
+                
                 file_base = os.path.join(options.output_dir,class_name)
                 img.filename = file_base + ".unknown.format"
                 img.save()
-                import ImageFile
-                fp = open(img.filename, "rb")
-                p = ImageFile.Parser()
-                while True:
-                    s = fp.read(1024)
-                    if not s:
-                        break
-                    p.feed(s)
-                im = p.close()
-                im.save(file_base + ".png")
+                convert_image(img.filename,file_base+".png")
                 print("= Saved converted image to " + file_base + ".png")
                 os.remove(img.filename)
                 tvars['HAS_TEXTURE'] = True

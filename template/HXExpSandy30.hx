@@ -79,8 +79,8 @@ class {{CLASS_NAME}} extends Shape3D, implements Primitive3D {
 	    {% endif -%}
 	    {% endfor %}
 
-	    rotateX = -{{object.RotX * (180/pi)}};
-	    rotateZ = -{{object.RotY * (180/pi)}};
+	    rotateX = -({{object.RotX * (180/pi)}});
+	    rotateZ = -({{object.RotY * (180/pi)}});
 	    rotateY = {{object.RotZ * (180/pi)}};
 
 	    scaleX = {{object.SizeX}};
