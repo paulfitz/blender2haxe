@@ -7,6 +7,21 @@ used under the GPL.
 
 =======================================================================
 
+Install this code in:
+  .blender/scripts/blender2haxe
+or
+  .blender\scripts\blender2haxe
+or whatever is appropriate for your operating system.
+
+Then from Blender, select an object, and do:
+  File->Export->Haxe class
+
+You can also run the code from the command line, as follows:
+
+  blender -b file.blend -P ~/.blender/scripts/blender2haxe/HXExport.py
+
+=======================================================================
+
 Features:
 
 * Works from export menu, or from command line.
