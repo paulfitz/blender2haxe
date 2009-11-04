@@ -1,26 +1,27 @@
 
 # Run this as:
-#   make -f {{TESTED_CLASS_NAME}}_Makefile
+#   make -f {{TARGET_NAME}}_Makefile
 
 %.swf: %.hxml
 	haxe $<
 
-default: {{TESTED_CLASS_NAME}}.swf
-
-{{TESTED_CLASS_NAME}}.swf: {{TESTED_CLASS_NAME}}.hx
-{{TESTED_CLASS_NAME}}.swf: {{CLASS_NAME}}.hx
-
-{% if HAS_TEXTURE -%}
 %.swf: %.xml
 	swfmill simple $< $@
 
-{{TESTED_CLASS_NAME}}.swf: {{TESTED_CLASS_NAME}}Skin.swf
-{{TESTED_CLASS_NAME}}Skin.swf: {{TESTED_CLASS_NAME}}.png
+default: {{TARGET_NAME}}.swf
+
+{% if HAS_TEXTURE -%}
+{{TARGET_NAME}}.swf: {{TARGET_NAME}}Skin.swf
 {%- endif %}
 
-clean:
-	rm -f {{TESTED_CLASS_NAME}}.swf {{CLASS_NAME}}.swf
-{% if HAS_TEXTURE %}	rm -f {{TESTED_CLASS_NAME}}Skin.swf
+{% for t in TESTED_CLASSES %}
+{% if t.has_texture -%}
+{{TARGET_NAME}}Skin.swf: {{t.name}}.png
 {%- endif %}
+{{TARGET_NAME}}.swf: {{t.name}}.hx
+{% endfor %}
+
+{{TARGET_NAME}}.swf: {{CLASS_NAME}}.hx
+
 
 # Done!

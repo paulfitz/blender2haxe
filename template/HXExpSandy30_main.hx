@@ -1,12 +1,15 @@
 // -*- mode:java; tab-width:4; c-basic-offset:4; indent-tabs-mode:nil -*-
 
 package {{PACKAGE_NAME}};
-import {{TESTED_CLASS_NAME}};
+{% for t in TESTED_CLASSES -%}
+import {{t.name}};
+{% endfor %}
 
 import sandy.core.Scene3D;
 import sandy.core.scenegraph.Camera3D;
 import sandy.core.scenegraph.Group;
 import sandy.core.scenegraph.Shape3D;
+import sandy.core.scenegraph.TransformGroup;
 import sandy.events.SandyEvent;
 import sandy.parser.IParser;
 import sandy.parser.Parser;
@@ -23,16 +26,20 @@ import sandy.materials.Appearance;
 import sandy.materials.BitmapMaterial;
 import flash.display.BitmapData;
 
-{% if HAS_TEXTURE %}
-class {{TESTED_CLASS_NAME}}Skin extends BitmapData { 
+{% for t in TESTED_CLASSES %}
+{% if t.has_texture %}
+class {{t.name}}Skin extends BitmapData { 
     public function new() { super(1,1); } 
 } 
 {% endif %}
+{% endfor %}
 
 class {{CLASS_NAME}} extends Sprite {
     private var scene: Scene3D;
     private var camera: Camera3D;
-    private var shape: Shape3D;
+    //private var shape: Shape3D;
+    private var shapes: List<Shape3D>;
+    private var tg: TransformGroup;
     
     public function new () {
         super();
@@ -65,21 +72,35 @@ class {{CLASS_NAME}} extends Sprite {
     
     public function createScene():Group {
         var g:Group = new Group();
-        shape = new {{TESTED_CLASS_NAME}}();
-        shape.enableBackFaceCulling = false;
+        tg = new TransformGroup();
 
-        {% if HAS_TEXTURE %}
-        var bmp = new BitmapMaterial(new {{TESTED_CLASS_NAME}}Skin());
-        shape.appearance = new Appearance(bmp);
+        //shape = new {{TESTED_CLASS_NAME}}();
+        //shape.enableBackFaceCulling = false;
+
+        shapes = new List<Shape3D>();
+        {% for t in TESTED_CLASSES %}
+        var s:Shape3D = new {{t.name}}();
+        s.enableBackFaceCulling = false;
+        shapes.add(s);
+
+        {% if t.has_texture %}
+        var bmp = new BitmapMaterial(new {{t.name}}Skin());
+        s.appearance = new Appearance(bmp);
         {% endif %}
-	
-        g.addChild(shape);
+
+        tg.addChild(s);
+        {% endfor %}
+
+        g.addChild(tg);
+
         return g;
     }
 
     public function enterFrameHandler( ?event : Event ) : Void {
         scene.render();
-        shape.rotateY += 1;
+        //for (s in shapes) {
+        tg.rotateY += 1;
+            //}
     }
     
     

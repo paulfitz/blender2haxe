@@ -2,7 +2,11 @@
 	
 <movie width="640" height="480" framerate="60">
   <library>
-    <bitmap id="{{TESTED_CLASS_NAME}}Skin" name="{{TESTED_CLASS_NAME}}Skin" import="{{TESTED_CLASS_NAME}}.png" />
+{% for t in TESTED_CLASSES %}
+{% if t.has_texture %}
+    <bitmap id="{{t.name}}Skin" name="{{t.name}}Skin" import="{{t.name}}.png" />
+{% endif %}
+{% endfor %}
   </library>
   <frame>
   </frame>

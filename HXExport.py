@@ -73,6 +73,7 @@ import Blender
 import BPyMessages 
 import bpy 
 import math
+import copy
 from math import *
 from Blender.BGL import *
 
@@ -124,9 +125,10 @@ update_registry()
 # Generate HX files.
 
 class HxOptions:
-	def __init__(self, output_dir, include_tests):
-		self.include_tests = include_tests
+	def __init__(self, output_dir, base_dir, include_tests):
 		self.output_dir = output_dir
+                self.base_dir = base_dir
+                self.include_tests = include_tests
 
 def render(template_name, variables):
     try:
@@ -137,7 +139,7 @@ def render(template_name, variables):
     return content
 
 
-def export_sandy(class_name, tvars, options):
+def generate_files(class_name,has_texture,tvars,options):
 	file_name = "HXExpSandy30.hx"
 	test_file_name = "HXExpSandy30_main.hx"
 	build_file_name = "HXExpSandy30_main.hxml"
@@ -145,32 +147,61 @@ def export_sandy(class_name, tvars, options):
 	res_file_name = "HXExpSandy30.xml"
 
 	tvars['pi'] = pi
-	tvars['TESTED_CLASS_NAME'] = class_name
+        tvars['TARGET_NAME'] = class_name
+        tvars['HAS_TEXTURE'] = has_texture
 
-	save_file(file_name, class_name, None, tvars, options)
+        # make basic model .hx file
+        if 'mesh' in tvars:
+            save_file(file_name, class_name, None, tvars, options)
+            full = False
+        else:
+            full = True
 
-	if test_file_name and build_file_name and options.include_tests:
+	if options.include_tests:
+                # make test .hx file
 		save_file(test_file_name,
 			  class_name + "Main",
 			  None,
 			  tvars,
 			  options)
+
+                # make haxe project file for compiling test
 		save_file(build_file_name,
 			  class_name + "Main",
 			  class_name + ".hxml",
 			  tvars,
 			  options)
-		save_file(make_file_name,
-			  class_name + "Main",
-			  class_name + "_Makefile",
-			  tvars,
-			  options)
-                if 'HAS_TEXTURE' in tvars:
+
+                # make swfmill project file for generating texture
+                if has_texture:
                     save_file(res_file_name,
                               class_name + "Main",
                               class_name + "Skin.xml",
                               tvars,
                               options)
+
+                # make Makefile for running haxe and swfmill if needed
+		save_file(make_file_name,
+			  class_name + "Main",
+                          "Makefile" if full else (class_name+"_Makefile"),
+			  tvars,
+			  options)
+
+
+def export_sandy(tested_classes, tvars, options):
+        tvars['TESTED_CLASSES'] = tested_classes
+        if len(tested_classes)==1:
+            c = tested_classes[0]
+            generate_files(c['name'],c['has_texture'],tvars,options)
+            return
+        any_texture = False
+        for c in tested_classes:
+            if c['has_texture']:
+                any_texture = True
+        fname = "All"
+        if 'hint' in tvars:
+            fname = tvars['hint']
+        generate_files(fname,any_texture,tvars,options)
 
 def save_file(file_name,class_name,output_file_name,tvars,options):
 	success = False
@@ -207,21 +238,20 @@ def convert_image(src,dest):
             import subprocess
             subprocess.call(['convert', src, dest])
 
-def export_to_hx(ob,options):
+def hintName():
+	fname = os.path.split(Blender.Get('filename'))[1]
+        fname = fname.replace(".blend","")
+        return fname
+
+def export_to_hx(ob,options,cam,cam_geom):
+        has_texture = False
 	me = Mesh.New()
 	me.getFromObject(ob,0)
 	
 	class_name = ob.name.replace(".","").replace("-","")
 
-	cam = None
-	cam_geom = None
-	cam_loc = [0,0,0]
-	if options.include_tests == 1:
-		cams = Camera.Get()
-		if len(cams)>0:
-			cam = cams[0]
-			cam_geom = Object.Get(cam.name)
-			print("= Using camera: " + cam.name)
+        if not(os.path.exists(options.output_dir)):
+            os.makedirs(options.output_dir)
 
 	tvars = { 'mesh': me,
 		  'object': ob,
@@ -241,26 +271,73 @@ def export_to_hx(ob,options):
                 # perfect, one image, we can deal with that
                 img = Blender.Image.Get(images[0])
                 print("= Processing image "+img.filename)
-                
+
+                original_name = img.filename
                 file_base = os.path.join(options.output_dir,class_name)
                 img.filename = file_base + ".unknown.format"
-                img.save()
-                convert_image(img.filename,file_base+".png")
-                print("= Saved converted image to " + file_base + ".png")
-                os.remove(img.filename)
-                tvars['HAS_TEXTURE'] = True
+                new_name = img.filename
+                    
+                try:
+                    try:
+                        img.save()
+                    except:
+                        # give Blender a chance to scan for image
+                        img.filename = os.path.join(options.base_dir,os.path.split(original_name)[1])
+                        print("= Attempting to load image from " +
+                              str(img.filename))
+                        img.reload()
+                        print("= Got image of dimensions " + str(img.size))
+                        img.filename = new_name
+                        img.save()
+                    convert_image(img.filename,file_base+".png")
+                    print("= Saved converted image to " + file_base + ".png")
+                    os.remove(img.filename)
+                    has_texture = True
+                except:
+                    print "No image available - perhaps it was not packed?"
+                    print "Omitting texture."
+                    raise
+                img.filename = original_name
 
-	export_sandy(class_name,tvars,options)
-
+        rec = {'name':class_name, 'has_texture':has_texture}
+	export_sandy([rec],tvars,options)
+        return rec
                 
 
 def export_list(obs,options):
+        print("================================================")
+	cam = None
+	cam_geom = None
+	cam_loc = [0,0,0]
+	if options.include_tests == 1:
+		cams = Camera.Get()
+		if len(cams)>0:
+			cam = cams[0]
+			cam_geom = Object.Get(cam.name)
+			print("= Using camera: " + cam.name)
+
+        recs = []
 	for ob in obs:
 		me = Mesh.New()
 		me.getFromObject(ob,0)
 		print("================================================")
 		print("= Working on object " + ob.name)
-		export_to_hx(ob,options)
+		rec = export_to_hx(ob,options,cam,cam_geom)
+                recs.append(rec)
+        if len(recs)>=1:
+            hint = "All" + hintName()
+            need_check = True
+            while need_check:
+                need_check = False
+                for r in recs:
+                    if hint == r['name']:
+                        hint = "All" + hint
+                        need_check = True
+                        break
+            
+            # make test code for all objects together
+            export_sandy(recs,{'camera':cam,'camera_geom':cam_geom,
+                               'hint': hint},options)
 
 # --------------------------------------------------------------------------
 # Generate HX files.
@@ -328,6 +405,7 @@ def bevent(evt):
 		# export all object 
 		try:
 			options = HxOptions(fileButton.val,
+                                            fileButton.val,
 					    export_test_button.val)
 			export_list(obs,options)
 			Draw.PupMenu("Export Successful")
@@ -378,4 +456,4 @@ else:
 	print("Command-line mode operation, exporting all objects")
 	sce = bpy.data.scenes.active 
 	obs = [ob for ob in sce.objects if ob.type == 'Mesh']
-	export_list(obs,HxOptions("",True))
+	export_list(obs,HxOptions("Haxe","",True))

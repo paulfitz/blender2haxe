@@ -3,9 +3,14 @@ This is to play around with exporting Blender models to Haxe.
 
 Based on code from Dennis Ippel at:
   http://www.rozengain.com/blog/2008/01/02/export-your-blender-objects-straight-to-away3d-papervision3d-and-sandy/
-used under the GPL.
+used under the GPL.  Dennis accepted a patch for outputting Haxe; this
+code is basically that patch gone wild and taking over everything.
+
+  -- paulfitz, 2009
 
 =======================================================================
+= INSTALLATION
+=
 
 Install this code in:
   .blender/scripts/blender2haxe
@@ -21,8 +26,8 @@ You can also run the code from the command line, as follows:
   blender -b file.blend -P ~/.blender/scripts/blender2haxe/HXExport.py
 
 =======================================================================
-
-Features:
+= FEATURES
+=
 
 * Works from export menu, or from command line.
 
