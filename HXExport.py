@@ -74,6 +74,7 @@ import BPyMessages
 import bpy 
 import math
 import copy
+import re
 from math import *
 from Blender.BGL import *
 
@@ -248,7 +249,9 @@ def export_to_hx(ob,options,cam,cam_geom):
 	me = Mesh.New()
 	me.getFromObject(ob,0)
 	
-	class_name = ob.name.replace(".","").replace("-","")
+	class_name = ob.name
+        class_name = re.sub(r"[^a-zA-Z0-9]",r"",class_name)
+        class_name = class_name.capitalize()
 
         if not(os.path.exists(options.output_dir)):
             os.makedirs(options.output_dir)

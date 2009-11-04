@@ -24,6 +24,10 @@ import sandy.primitive.Sphere;
 import sandy.core.Scene3D;
 import sandy.materials.Appearance;
 import sandy.materials.BitmapMaterial;
+import sandy.materials.Material;
+import sandy.materials.ColorMaterial;
+import sandy.materials.attributes.MaterialAttributes;
+import sandy.materials.attributes.LineAttributes;
 import flash.display.BitmapData;
 
 {% for t in TESTED_CLASSES %}
@@ -37,9 +41,7 @@ class {{t.name}}Skin extends BitmapData {
 class {{CLASS_NAME}} extends Sprite {
     private var scene: Scene3D;
     private var camera: Camera3D;
-    //private var shape: Shape3D;
-    private var shapes: List<Shape3D>;
-    private var tg: TransformGroup;
+    private var shapes: TransformGroup;
     
     public function new () {
         super();
@@ -72,41 +74,40 @@ class {{CLASS_NAME}} extends Sprite {
     
     public function createScene():Group {
         var g:Group = new Group();
-        tg = new TransformGroup();
+        shapes = new TransformGroup();
 
-        //shape = new {{TESTED_CLASS_NAME}}();
-        //shape.enableBackFaceCulling = false;
-
-        shapes = new List<Shape3D>();
         {% for t in TESTED_CLASSES %}
         var s:Shape3D = new {{t.name}}();
         s.enableBackFaceCulling = false;
-        shapes.add(s);
 
         {% if t.has_texture %}
-        var bmp = new BitmapMaterial(new {{t.name}}Skin());
-        s.appearance = new Appearance(bmp);
+        var bmp{{loop.index}} = new BitmapMaterial(new {{t.name}}Skin());
+        s.appearance = new Appearance(bmp{{loop.index}});
+        {% else %}
+        var materialAttr{{loop.index}}:MaterialAttributes = new MaterialAttributes( 
+				[new LineAttributes( 0.5, 0x2111BB, 0.4 )]
+				);
+	     var material{{loop.index}}:Material = new ColorMaterial( 0xFFCC33, 1, materialAttr{{loop.index}} );
+        s.appearance = new Appearance(material{{loop.index}});
+
         {% endif %}
 
-        tg.addChild(s);
+        shapes.addChild(s);
         {% endfor %}
 
-        g.addChild(tg);
+        g.addChild(shapes);
 
         return g;
     }
 
     public function enterFrameHandler( ?event : Event ) : Void {
         scene.render();
-        //for (s in shapes) {
-        tg.rotateY += 1;
-            //}
+        shapes.rotateY += 1;
     }
     
     
     static function main() {
         //haxe.Firebug.redirectTraces();
         new {{CLASS_NAME}}();
-    }
-    
+    }    
 }
