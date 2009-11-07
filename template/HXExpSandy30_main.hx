@@ -78,7 +78,11 @@ class {{CLASS_NAME}} extends Sprite {
 
         {% for t in TESTED_CLASSES %}
         var s:Shape3D = new {{t.name}}();
+
+        // Turn off some optimizations.  These can often be turned
+        // back on, but hard to know this automatically.
         s.enableBackFaceCulling = false;
+        //s.useSingleContainer = false;
 
         {% if t.has_texture %}
         var bmp{{loop.index}} = new BitmapMaterial(new {{t.name}}Skin());
