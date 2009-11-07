@@ -84,9 +84,9 @@ class {{CLASS_NAME}} extends Sprite {
         {% for t in TESTED_CLASSES %}
         var s:Shape3D = new {{t.name}}();
 
-        // Turn off some optimizations.  These can often be turned
-        // back on, but hard to know this automatically.
-        s.enableBackFaceCulling = false;
+        // some options that may or may not be desired - should
+        // make these be flags.
+        s.enableBackFaceCulling = true;
         //s.useSingleContainer = false;
 
         {% if t.has_texture %}
