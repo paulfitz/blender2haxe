@@ -239,19 +239,23 @@ def convert_image(src,dest):
             import subprocess
             subprocess.call(['convert', src, dest])
 
+def haxeClassNamify(fname):
+        fname = re.sub(r"[^a-zA-Z0-9]",r"",fname)
+        fname = fname.capitalize()
+        return fname
+
 def hintName():
 	fname = os.path.split(Blender.Get('filename'))[1]
         fname = fname.replace(".blend","")
-        return fname
+        return haxeClassNamify(fname)
+
 
 def export_to_hx(ob,options,cam,cam_geom):
         has_texture = False
 	me = Mesh.New()
 	me.getFromObject(ob,0)
 	
-	class_name = ob.name
-        class_name = re.sub(r"[^a-zA-Z0-9]",r"",class_name)
-        class_name = class_name.capitalize()
+	class_name = haxeClassNamify(ob.name)
 
         if not(os.path.exists(options.output_dir)):
             os.makedirs(options.output_dir)
@@ -325,8 +329,14 @@ def export_list(obs,options):
 		me.getFromObject(ob,0)
 		print("================================================")
 		print("= Working on object " + ob.name)
-		rec = export_to_hx(ob,options,cam,cam_geom)
-                recs.append(rec)
+		sce = bpy.data.scenes.active
+                vis = list(set(sce.getLayers())&set(ob.layers))
+                if len(vis)>0:
+                    print("= Visible on layers: " + str(vis))
+                    rec = export_to_hx(ob,options,cam,cam_geom)
+                    recs.append(rec)
+                else:
+                    print("= Ignoring object, it is not visible")
         if len(recs)>=1:
             hint = "All" + hintName()
             need_check = True

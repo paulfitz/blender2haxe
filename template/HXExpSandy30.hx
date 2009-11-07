@@ -79,17 +79,23 @@ class {{CLASS_NAME}} extends Shape3D, implements Primitive3D {
 	    {% endif -%}
 	    {% endfor %}
 
-	    rotateX = -({{object.RotX * (180/pi)}});
-	    rotateZ = -({{object.RotY * (180/pi)}});
-	    rotateY = {{object.RotZ * (180/pi)}};
+        {% set rot = object.getEuler('worldspace') %}
 
-	    scaleX = {{object.SizeX}};
-	    scaleZ = {{object.SizeY}};
-	    scaleY = {{object.SizeZ}};
+	    rotateX = -({{rot[0] * (180/pi)}});
+	    rotateZ = -({{rot[1] * (180/pi)}});
+        rotateY = {{rot[2] * (180/pi)}};
 
-	    x = {{object.LocX}};
-	    z = {{object.LocY}};
-	    y = {{object.LocZ}};
+        {% set sz = object.getSize('worldspace') %}
+
+	    scaleX = {{sz[0]}};
+	    scaleZ = {{sz[1]}};
+	    scaleY = {{sz[2]}};
+
+        {% set loc = object.getLocation('worldspace') %}
+
+	    x = {{loc[0]}};
+	    z = {{loc[1]}};
+	    y = {{loc[2]}};
 
 	    return (l);
 	}
