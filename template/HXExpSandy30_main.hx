@@ -54,15 +54,20 @@ class {{CLASS_NAME}} extends Sprite {
         camera.x = 0;
         camera.y = 0;
         camera.z = 0;
-        camera.rotateX = -{{camera_geom.RotX * (180/pi)}}+90;
-        camera.rotateZ = -({{camera_geom.RotY * (180/pi)}});
-        camera.rotateY = {{camera_geom.RotZ * (180/pi)}};
-        camera.x = {{camera_geom.LocX}};
-        camera.z = {{camera_geom.LocY}};
-        camera.y = {{camera_geom.LocZ}};
-        camera.scaleX = {{camera_geom.SizeX}};
-        camera.scaleZ = {{camera_geom.SizeY}};
-        camera.scaleY = {{camera_geom.SizeZ}};
+
+        {% set rot = camera_geom.getEuler('worldspace') %}
+        {% set sz = camera_geom.getSize('worldspace') %}
+        {% set loc = camera_geom.getLocation('worldspace') %}
+
+        camera.rotateX = -{{rot[0] * (180/pi)}}+90;
+        camera.rotateZ = -({{rot[1] * (180/pi)}});
+        camera.rotateY = {{rot[2] * (180/pi)}};
+        camera.x = {{loc[0]}};
+        camera.z = {{loc[1]}};
+        camera.y = {{loc[2]}};
+        camera.scaleX = {{sz[0]}};
+        camera.scaleZ = {{sz[1]}};
+        camera.scaleY = {{sz[2]}};
         
         var root:Group = createScene();
         scene = new Scene3D("scene", this, camera, root);
