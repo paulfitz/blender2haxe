@@ -1,7 +1,7 @@
 #!BPY 
 """ 
 Name: 'Haxe Class (.hx) ...'
-Blender: 240
+Blender: 244
 Group: 'Export'
 Tooltip: 'Export geometry to Haxe Class (.hx)'
 """ 
@@ -70,8 +70,6 @@ env = Environment(loader = FileSystemLoader(template_dirs))
 from Blender import Scene, Mesh, Window, Get, sys, Image, Draw
 from Blender import Registry, Camera, Object
 import Blender
-import BPyMessages 
-import bpy 
 import math
 import copy
 import re
@@ -182,9 +180,12 @@ def generate_files(class_name,has_texture,tvars,options):
                               options)
 
                 # make Makefile for running haxe and swfmill if needed
-		save_file(make_file_name,
+                mname = "Makefile"
+                if not(full):
+                        mname = class_name + "_" + mname
+ 		save_file(make_file_name,
 			  class_name + "Main",
-                          "Makefile" if full else (class_name+"_Makefile"),
+                          mname,
 			  tvars,
 			  options)
 
@@ -329,7 +330,7 @@ def export_list(obs,options):
 		me.getFromObject(ob,0)
 		print("================================================")
 		print("= Working on object " + ob.name)
-		sce = bpy.data.scenes.active
+		sce = Blender.Scene.GetCurrent()
                 vis = list(set(sce.getLayers())&set(ob.layers))
                 if len(vis)>0:
                     print("= Visible on layers: " + str(vis))
@@ -399,7 +400,7 @@ def bevent(evt):
 		Draw.Redraw()
 	elif (evt== EVENT_EXPORT):
 		update_registry()
-		sce = bpy.data.scenes.active 
+		sce = Blender.Scene.GetCurrent()
 		
 		obs = None
 		
@@ -467,6 +468,7 @@ if Blender.mode == 'interactive':
 	Draw.Register(draw, event, bevent)
 else:
 	print("Command-line mode operation, exporting all objects")
-	sce = bpy.data.scenes.active 
+
+	sce = Blender.Scene.GetCurrent()
 	obs = [ob for ob in sce.objects if ob.type == 'Mesh']
 	export_list(obs,HxOptions("Haxe","",True))
