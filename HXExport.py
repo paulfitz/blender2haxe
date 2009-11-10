@@ -304,7 +304,6 @@ def export_to_hx(ob,options,cam,cam_geom):
                 except:
                     print "No image available - perhaps it was not packed?"
                     print "Omitting texture."
-                    raise
                 img.filename = original_name
 
         rec = {'name':class_name, 'has_texture':has_texture}
