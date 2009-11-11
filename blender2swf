@@ -1,0 +1,81 @@
+#!/bin/bash
+
+# This is an example of a command-line script to convert blender models
+# to flash swf, via Haxe.
+#
+# This was developed and tested for linux.
+# This script, and the blender2haxe script, are suitable to copy into your
+# path.
+
+
+
+SCRIPT=$HOME/.blender/scripts/blender2haxe/blender2haxe
+
+dir=__tmp_blender2swf_$$
+auto_skin=0
+auto_skin_txt=""
+src=""
+dest=""
+
+if [ ! $# -gt 0 ]; then
+    echo "Example usage:"
+    echo " blender2swf target.blend target.swf"
+    echo " blender2swf --auto_skin target.blend target.swf"
+    echo "   --auto_skin: UV map images will be added upon need (slow)"
+    exit 1
+fi
+
+while [ $# -gt 0 ]; do
+  case $1
+  in
+    --auto_skin|--autoskin)
+      auto_skin=1
+      auto_skin_text="--auto_skin"
+      shift
+    ;;
+
+    *)
+      if [ "k$src" = "k" ]; then
+        src=$1
+      else
+        dest=$1
+      fi
+      shift
+    ;;
+  esac
+done
+
+if [ "k$src" = "k" ]; then
+    echo "No blender file supplied, aborting"
+    exit 1
+fi
+
+if [ "k$dest" = "k" ]; then
+    dest=`basename $src .blend`.swf
+    d=`dirname $src`
+    if [ ! "k$d" = "k" ]; then
+	if [ ! "k$d" = "k." ]; then
+	    dest="$d/$dest"
+	fi
+    fi
+fi
+
+echo "Converting $src to $dest"
+
+$SCRIPT  --output $dir $auto_skin_text --swf $src
+
+if [ -e $dir ]; then
+    output=`find $dir -iname "*.swf" | grep -v "Skin.swf"`
+    if [ "k$output" = "k" ]; then
+	echo "Conversion failed"
+	rm -rf $dir
+	exit 1
+    else
+	cp $output $dest
+	echo "Cleaning up..."
+	rm -rf $dir
+	echo "Generated $dest"
+    fi
+fi
+
+
