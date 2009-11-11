@@ -327,7 +327,7 @@ def export_to_hx(ob,options,cam,cam_geom):
         if me.faceUV and len(images)==0 and options.auto_skin:
             print("= Trying baking to produce basic UV image")
             try:
-                img = Blender.Image.New("bake.tga",512,512,24)
+                img = Blender.Image.New("bake.tga",1024,1024,8)
                 img.filename = "bake.tga"
                 me = ob.getData(mesh=1)
                 for f in me.faces:
@@ -338,16 +338,17 @@ def export_to_hx(ob,options,cam,cam_geom):
                     o.select(0)
                 context = sce.getRenderingContext()
                 context.bakeMode = Blender.Scene.Render.BakeModes['TEXTURE']
-                context.enableOversampling(0)
-                context.enableMotionBlur(0)
-                context.enableShadow(0)
-                context.enableEnvironmentMap(0)
-                context.enableRayTracing(0)
-                context.enableRadiosityRender(0)
-                context.enablePanorama(0)
-                context.enableFieldRendering(0)
-                context.gaussFilterSize(0.5)
-                context.setRenderWinSize(25)
+                if False: # could have option to increase baking speed
+                    context.enableOversampling(0)
+                    context.enableMotionBlur(0)
+                    context.enableShadow(0)
+                    context.enableEnvironmentMap(0)
+                    context.enableRayTracing(0)
+                    context.enableRadiosityRender(0)
+                    context.enablePanorama(0)
+                    context.enableFieldRendering(0)
+                    context.gaussFilterSize(0.5)
+                    context.setRenderWinSize(25)
                 ob.select(1)
                 context.bake()
                 ob.select(0)
