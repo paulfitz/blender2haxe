@@ -239,6 +239,7 @@ def save_file(file_name,class_name,output_file_name,tvars,options,packaged):
 	out_dir = options.output_dir
 	if packaged and pname!="":
 		out_dir = os.path.join(out_dir,pname)
+                reported_name = os.path.join(pname,reported_name)
 			
 	if not(os.path.exists(out_dir)):
             os.makedirs(out_dir)
@@ -249,7 +250,7 @@ def save_file(file_name,class_name,output_file_name,tvars,options,packaged):
 	out.write(x)
 	out.close()
 	inf.close()
-	print "= Saved: "+reported_name
+	print "+ "+output_file_name
 
 def convert_image(src,dest):
         try:
