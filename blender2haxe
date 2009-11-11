@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# This is an example of a command-line script to run this utility.
+# This is an example of a command-line script to convert blender models
+# to haxe code (and optionally to flash swf files).
 # We make use of environment variables to work-around the lack of
 # a mechanism for passing arguments to a script from the command-line.
 # This is for UNIX-like systems only.
@@ -9,6 +10,7 @@ SCRIPT=$HOME/.blender/scripts/blender2haxe/HXExport.py
 
 dir=Haxe
 auto_skin=0
+compile_swf=false
 target=""
 
 if [ ! $# -gt 0 ]; then
@@ -16,8 +18,10 @@ if [ ! $# -gt 0 ]; then
     echo " blender2haxe target.blend"
     echo " blender2haxe --output <output_directory> target.blend"
     echo " blender2haxe --auto_skin target.blend"
+    echo " blender2haxe --swf target.blend"
     echo "   --output <output_directory>: sets where files will be put (default: Haxe)"
     echo "   --auto_skin: UV map images will be added upon need (slow)"
+    echo "   --swf: Compile swf files (requires haxe, swfmill, sandy for haxe)"
     exit 1
 fi
 
@@ -34,6 +38,11 @@ while [ $# -gt 0 ]; do
       shift
     ;;
 
+    --swf)
+      compile_swf=true
+      shift
+      ;;
+
     *)
       target=$1
       shift
@@ -48,8 +57,15 @@ fi
 
 echo "Working on $target"
 echo "Working in $dir"
-echo "Auto_skin set to $auto_skin"
+echo "Flag auto_skin set to $auto_skin"
 
-BLENDER2HAXE_DIR=$dir BLENDER2HAXE_AUTO_SKIN=$auto_skin blender -b $target -P $SCRIPT
-
-
+BLENDER2HAXE_DIR=$dir BLENDER2HAXE_AUTO_SKIN=$auto_skin blender -b $target -P $SCRIPT && {
+    if $compile_swf; then
+	cd $dir
+	make && {
+	    for f in `ls *.swf`; do
+	      echo "SWF: $dir/$f"
+	    done
+	}
+    fi
+}
