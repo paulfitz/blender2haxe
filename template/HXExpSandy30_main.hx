@@ -85,7 +85,7 @@ class {{CLASS_NAME}} extends Sprite {
 
         // some options that may or may not be desired - should
         // make these be flags.
-        s.enableBackFaceCulling = true;
+        s.enableBackFaceCulling = false;
         //s.useSingleContainer = false;
 
         {% if t.has_texture %}
