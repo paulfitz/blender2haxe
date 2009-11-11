@@ -238,6 +238,9 @@ def convert_image(src,dest):
         except:
             import subprocess
             subprocess.call(['convert', '-quiet', src, dest])
+            if not(os.path.exists(dest)):
+                print("Retrying conversion, assuming TGA")
+                subprocess.call(['convert', "tga:" + src, dest])
 
 def haxeClassNamify(fname):
         fname = re.sub(r"[^a-zA-Z0-9]",r"",fname)
