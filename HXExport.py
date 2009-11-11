@@ -237,10 +237,9 @@ def convert_image(src,dest):
             im.save(file_base + ".png")
         except:
             import subprocess
-            subprocess.call(['convert', '-quiet', src, dest])
+            subprocess.call(['convert', '-quiet', "tga:" + src, dest])
             if not(os.path.exists(dest)):
-                print("Retrying conversion, assuming TGA")
-                subprocess.call(['convert', "tga:" + src, dest])
+                subprocess.call(['convert', '-quiet', src, dest])
 
 def haxeClassNamify(fname):
         fname = re.sub(r"[^a-zA-Z0-9]",r"",fname)
@@ -287,9 +286,10 @@ def export_to_hx(ob,options,cam,cam_geom):
                 con.bake()
                 ob.select(0)
             except:
-                print "FAIL"
-                raise
+                print "Cannot do baking on this kind of object yet"
 
+        me = Mesh.New()
+	me.getFromObject(ob,0)
 	
 	class_name = haxeClassNamify(ob.name)
 
@@ -506,5 +506,6 @@ else:
 	print("Command-line mode operation, exporting all objects")
 
 	sce = Blender.Scene.GetCurrent()
-	obs = [ob for ob in sce.objects if ob.type == 'Mesh']
+	obs = [ob for ob in sce.objects if (ob.type in 'Mesh')]
+	#obs = [ob for ob in sce.objects if (ob.type in ['Mesh','Curve','Surf','MBall','Font'])]
 	export_list(obs,HxOptions("Haxe","",True))
