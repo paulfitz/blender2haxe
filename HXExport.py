@@ -265,9 +265,6 @@ def export_to_hx(ob,options,cam,cam_geom):
                 for o in sce.objects:
                     ob.select(0)
                 import unwrap.uvcalc_smart_project
-                #Blender.Run(os.path.join(Blender.Get("scriptsdir"),
-                #         "blender/uvcalc_smart_project.py"))
-                #Window.EditMode(0)
                 me = ob.getData(False,True)
                 me.addUVLayer( "bake" )
                 me.activeUVLayer = "bake"
@@ -282,7 +279,6 @@ def export_to_hx(ob,options,cam,cam_geom):
                 con = sce.getRenderingContext()
                 con.bakeMode = Blender.Scene.Render.BakeModes['TEXTURE']
                 ob.select(1)
-                Blender.Save("test2.blend",True)
                 con.bake()
                 ob.select(0)
             except:
