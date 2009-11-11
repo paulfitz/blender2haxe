@@ -1,7 +1,3 @@
-
-# Run this as:
-#   make -f {{TARGET_NAME}}_Makefile
-
 %.swf: %.hxml
 	haxe $<
 
@@ -18,7 +14,7 @@ default: {{TARGET_NAME}}.swf
 {% if t.has_texture -%}
 {{TARGET_NAME}}Skin.swf: {{t.name}}.png
 {%- endif %}
-{{TARGET_NAME}}.swf: {{t.name}}.hx
+{{TARGET_NAME}}.swf: {{PACKAGE_NAME_SLASH}}{{t.name}}.hx
 {% endfor %}
 
 {{TARGET_NAME}}.swf: {{CLASS_NAME}}.hx

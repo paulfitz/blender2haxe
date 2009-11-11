@@ -5,3 +5,4 @@
 {%- endif %}
 -lib sandy
 -main {{CLASS_NAME}}
+

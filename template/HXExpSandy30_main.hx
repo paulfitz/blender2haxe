@@ -1,8 +1,7 @@
 // -*- mode:java; tab-width:4; c-basic-offset:4; indent-tabs-mode:nil -*-
 
-package {{PACKAGE_NAME}};
 {% for t in TESTED_CLASSES -%}
-import {{t.name}};
+import {{PACKAGE_NAME_DOT}}{{t.name}};
 {% endfor %}
 
 import sandy.core.Scene3D;

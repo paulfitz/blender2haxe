@@ -82,12 +82,12 @@ from Blender.BGL import *
 reg_key = "HXExport5"
 
 def update_registry():
-    global as_package_name
+    global hx_package_name
     global fileButton
     global export_all_button
     global export_test_button
     d = {}
-    d['package_name'] = as_package_name.val
+    d['package_name'] = hx_package_name.val
     d['file_location'] = fileButton.val
     d['export_all'] = export_all_button.val
     d['export_test'] = export_test_button.val
@@ -115,7 +115,7 @@ if not(got):
     export_test = 0
     auto_skin = 0
 
-as_package_name = Draw.Create(package_name)
+hx_package_name = Draw.Create(package_name)
 fileButton = Draw.Create(file_location)
 export_all_button = Draw.Create(export_all)
 export_test_button = Draw.Create(export_test)
@@ -127,11 +127,13 @@ update_registry()
 # Generate HX files.
 
 class HxOptions:
-	def __init__(self, output_dir, base_dir, include_tests, auto_skin):
+	def __init__(self, output_dir, base_dir, include_tests, auto_skin,
+		     package_name):
 		self.output_dir = output_dir
                 self.base_dir = base_dir
                 self.include_tests = include_tests
 		self.auto_skin = auto_skin
+		self.package_name = package_name
 
 def render(template_name, variables):
     try:
@@ -155,7 +157,7 @@ def generate_files(class_name,has_texture,tvars,options):
 
         # make basic model .hx file
         if 'mesh' in tvars:
-            save_file(file_name, class_name, None, tvars, options)
+            save_file(file_name, class_name, None, tvars, options,True)
             full = False
         else:
             full = True
@@ -166,14 +168,16 @@ def generate_files(class_name,has_texture,tvars,options):
 			  class_name + "Main",
 			  None,
 			  tvars,
-			  options)
+			  options,
+			  False)
 
                 # make haxe project file for compiling test
 		save_file(build_file_name,
 			  class_name + "Main",
 			  class_name + ".hxml",
 			  tvars,
-			  options)
+			  options,
+			  False)
 
                 # make swfmill project file for generating texture
                 if has_texture:
@@ -181,7 +185,8 @@ def generate_files(class_name,has_texture,tvars,options):
                               class_name + "Main",
                               class_name + "Skin.xml",
                               tvars,
-                              options)
+                              options,
+			      False)
 
                 # make Makefile for running haxe and swfmill if needed
                 mname = "Makefile"
@@ -191,7 +196,8 @@ def generate_files(class_name,has_texture,tvars,options):
 			  class_name + "Main",
                           mname,
 			  tvars,
-			  options)
+			  options,
+			  False)
 
 
 def export_sandy(tested_classes, tvars, options):
@@ -209,9 +215,18 @@ def export_sandy(tested_classes, tvars, options):
             fname = tvars['hint']
         generate_files(fname,any_texture,tvars,options)
 
-def save_file(file_name,class_name,output_file_name,tvars,options):
+def save_file(file_name,class_name,output_file_name,tvars,options,packaged):
 	success = False
-	tvars['PACKAGE_NAME'] = as_package_name.val
+	pname = options.package_name
+	if pname != "":
+		tvars['PACKAGE_NAME'] = pname
+		tvars['PACKAGE_NAME_DOT'] = pname + "."
+		tvars['PACKAGE_NAME_SLASH'] = pname + "/"
+	else:
+		tvars['PACKAGE_NAME'] = ""
+		tvars['PACKAGE_NAME_DOT'] = ""
+		tvars['PACKAGE_NAME_SLASH'] = ""
+		
 	tvars['CLASS_NAME'] = class_name
 	template_name = get_path()+sys.sep+ "template" +sys.sep+ file_name
 	inf = open(template_name, "r")
@@ -220,7 +235,15 @@ def save_file(file_name,class_name,output_file_name,tvars,options):
 	if not(output_file_name):
 		output_file_name = class_name+ext
 	reported_name = output_file_name
-	output_file_name = os.path.join(options.output_dir,output_file_name)
+
+	out_dir = options.output_dir
+	if packaged and pname!="":
+		out_dir = os.path.join(out_dir,pname)
+			
+	if not(os.path.exists(out_dir)):
+            os.makedirs(out_dir)
+
+	output_file_name = os.path.join(out_dir,output_file_name)
 	out = open(output_file_name, 'w')
 	x = render(file_name,tvars)
 	out.write(x)
@@ -475,7 +498,8 @@ def bevent(evt):
 			options = HxOptions(fileButton.val,
                                             fileButton.val,
 					    export_test_button.val,
-					    auto_skin_button.val)
+					    auto_skin_button.val,
+					    hx_package_name.val)
 			export_list(obs,options)
 			Draw.PupMenu("Export Successful")
 		except:
@@ -483,7 +507,7 @@ def bevent(evt):
 		Draw.Exit()
 
 	elif (evt== EVENT_BROWSEFILE):
-		Window.FileSelector(FileSelected,"Export .as", expFileName)
+		Window.FileSelector(FileSelected,"Export .hx", expFileName)
 		Draw.Redraw(1)
 
 		
@@ -496,7 +520,7 @@ def FileSelected(fileName):
 		cutils.Debug.Debug('ERROR: filename is empty','ERROR')
 
 def draw():
-	global as_package_name
+	global hx_package_name
 	global fileButton, expFileName
 	global engine_menu, engine_name
 	global EVENT_NOEVENT,EVENT_DRAW,EVENT_EXIT,EVENT_EXPORT
@@ -511,7 +535,7 @@ def draw():
 	glClear(GL_COLOR_BUFFER_BIT)
 	glRasterPos2i(40, 240)
 
-	as_package_name = Draw.String("Package name: ", EVENT_NOEVENT, 40, 130, 250, 20, as_package_name.val, 300)
+	hx_package_name = Draw.String("Package name: ", EVENT_NOEVENT, 40, 130, 250, 20, hx_package_name.val, 300)
 
 	fileButton = Draw.String('File location: ', EVENT_NOEVENT, 40, 100, 250, 20, fileButton.val, 255) 
 	Draw.PushButton('...', EVENT_BROWSEFILE, 300, 100, 30, 20, 'browse file')
@@ -530,4 +554,4 @@ else:
 	sce = Blender.Scene.GetCurrent()
 	obs = [ob for ob in sce.objects if (ob.type in 'Mesh')]
 	#obs = [ob for ob in sce.objects if (ob.type in ['Mesh','Curve','Surf','MBall','Font'])]
-	export_list(obs,HxOptions("Haxe","",True,False))
+	export_list(obs,HxOptions("Haxe","",True,False,""))
