@@ -34,7 +34,7 @@ Tooltip: 'Export geometry to Haxe Class (.hx)'
 # Information about this script for Blender
 
 __author__ = "Paul Fitzpatrick"
-__url__ = ("http://live.makesweet.com")
+__url__ = ("http://github.com/paulfitz/blender2haxe")
 __version__ = "0.1"
 
 __bpydoc__ = """
