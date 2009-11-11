@@ -553,4 +553,12 @@ else:
 	sce = Blender.Scene.GetCurrent()
 	obs = [ob for ob in sce.objects if (ob.type in 'Mesh')]
 	#obs = [ob for ob in sce.objects if (ob.type in ['Mesh','Curve','Surf','MBall','Font'])]
-	export_list(obs,HxOptions("Haxe","",True,False,""))
+
+        try:
+            out_dir = os.environ['BLENDER2HAXE_DIR']
+        except:
+            out_dir = "Haxe"
+        
+        options = HxOptions(out_dir,"",True,False,"")
+        
+	export_list(obs,options)
