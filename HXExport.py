@@ -79,7 +79,7 @@ from Blender.BGL import *
 # --------------------------------------------------------------------------
 # Store defaults in Blender
 
-reg_key = "HXExport3"
+reg_key = "HXExport5"
 
 def update_registry():
     global as_package_name
@@ -91,6 +91,7 @@ def update_registry():
     d['file_location'] = fileButton.val
     d['export_all'] = export_all_button.val
     d['export_test'] = export_test_button.val
+    d['auto_skin'] = auto_skin_button.val
     Blender.Registry.SetKey(reg_key, d, True)
 
 rdict = Registry.GetKey(reg_key, True)
@@ -101,6 +102,7 @@ if rdict:
 	file_location = rdict['file_location']
 	export_all = rdict['export_all']
 	export_test = rdict['export_test']
+	auto_skin = rdict['auto_skin']
 	got = True
     except:
         got = False
@@ -111,11 +113,13 @@ if not(got):
     file_location = ""
     export_all = 0
     export_test = 0
+    auto_skin = 0
 
 as_package_name = Draw.Create(package_name)
 fileButton = Draw.Create(file_location)
 export_all_button = Draw.Create(export_all)
 export_test_button = Draw.Create(export_test)
+auto_skin_button = Draw.Create(auto_skin)
 update_registry()
 
 
@@ -123,10 +127,11 @@ update_registry()
 # Generate HX files.
 
 class HxOptions:
-	def __init__(self, output_dir, base_dir, include_tests):
+	def __init__(self, output_dir, base_dir, include_tests, auto_skin):
 		self.output_dir = output_dir
                 self.base_dir = base_dir
                 self.include_tests = include_tests
+		self.auto_skin = auto_skin
 
 def render(template_name, variables):
     try:
@@ -237,9 +242,13 @@ def convert_image(src,dest):
             im.save(file_base + ".png")
         except:
             import subprocess
-            subprocess.call(['convert', '-quiet', "tga:" + src, dest])
+            subprocess.call(['convert', '-quiet', "tga:" + src, dest],
+			    stdout=subprocess.PIPE,stderr=subprocess.PIPE)
             if not(os.path.exists(dest)):
-                subprocess.call(['convert', '-quiet', src, dest])
+                subprocess.call(['convert', '-quiet', src, dest],
+				stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+            if not(os.path.exists(dest)):
+		    print "= FAILED to create: "+dest
 
 def haxeClassNamify(fname):
         fname = re.sub(r"[^a-zA-Z0-9]",r"",fname)
@@ -257,32 +266,45 @@ def export_to_hx(ob,options,cam,cam_geom):
 	me = Mesh.New()
 	me.getFromObject(ob,0)
 
-        if not(me.faceUV):
+        if not(me.faceUV) and auto_skin:
             # try auto unwrapping
-            print("Trying unwrapping")
+            print("Trying unwrapping and baking to produce skin image")
             try:
-		sce = Blender.Scene.GetCurrent()
+                sce = Blender.Scene.GetCurrent()
                 for o in sce.objects:
                     ob.select(0)
                 import unwrap.uvcalc_smart_project
-                me = ob.getData(False,True)
-                me.addUVLayer( "bake" )
-                me.activeUVLayer = "bake"
-                me.renderUVLayer = "bake"
-                img = Blender.Image.New("foo.tga",512,512,24)
-                img.filename = "foo.tga"
+                me = ob.getData(mesh=1)
+                #me.addUVLayer( "bake" )
+                #me.activeUVLayer = "bake"
+                #me.renderUVLayer = "bake"
+                img = Blender.Image.New("bake.tga",512,512,24)
+                img.filename = "bake.tga"
                 for f in me.faces:
                     f.image = img
                 me.update()
                 unwrap.uvcalc_smart_project.uvcalc_main([ob])
                 me.update()
-                con = sce.getRenderingContext()
-                con.bakeMode = Blender.Scene.Render.BakeModes['TEXTURE']
+		Blender.Save("test2.blend",1)
+                context = sce.getRenderingContext()
+                context.bakeMode = Blender.Scene.Render.BakeModes['TEXTURE']
+		context.enableOversampling(0)
+		context.enableMotionBlur(0)
+		context.enableShadow(0)
+		context.enableEnvironmentMap(0)
+		context.enableRayTracing(0)
+		context.enableRadiosityRender(0)
+		context.enablePanorama(0)
+		context.enableFieldRendering(0)
+		context.gaussFilterSize(0.5)
+		context.setRenderWinSize(25)
                 ob.select(1)
-                con.bake()
+		Blender.Save("test3.blend",1)
+                context.bake()
                 ob.select(0)
-            except:
-                print "Cannot do baking on this kind of object yet"
+            except e:
+                print "Unwrapping and baking didn't work out, skipping"
+		print "Problem:", e
 
         me = Mesh.New()
 	me.getFromObject(ob,0)
@@ -452,7 +474,8 @@ def bevent(evt):
 		try:
 			options = HxOptions(fileButton.val,
                                             fileButton.val,
-					    export_test_button.val)
+					    export_test_button.val,
+					    auto_skin_button.val)
 			export_list(obs,options)
 			Draw.PupMenu("Export Successful")
 		except:
@@ -479,8 +502,10 @@ def draw():
 	global EVENT_NOEVENT,EVENT_DRAW,EVENT_EXIT,EVENT_EXPORT
 	global export_all_button
 	global export_test_button
+	global auto_skin_button
 	global export_all
 	global export_test
+	global auto_skin
 	expFileName = ""
 	########## Titles
 	glClear(GL_COLOR_BUFFER_BIT)
@@ -488,10 +513,11 @@ def draw():
 
 	as_package_name = Draw.String("Package name: ", EVENT_NOEVENT, 40, 130, 250, 20, as_package_name.val, 300)
 
-	fileButton = Draw.String('File location: ', EVENT_NOEVENT, 40, 70, 250, 20, fileButton.val, 255) 
-	Draw.PushButton('...', EVENT_BROWSEFILE, 300, 70, 30, 20, 'browse file')
-	export_all_button = Draw.Toggle('Export ALL scene objects', EVENT_NOEVENT, 40, 45, 200, 20, export_all_button.val)
-	export_test_button = Draw.Toggle('Export test code for object(s)', EVENT_NOEVENT, 250, 45, 200, 20, export_test_button.val)
+	fileButton = Draw.String('File location: ', EVENT_NOEVENT, 40, 100, 250, 20, fileButton.val, 255) 
+	Draw.PushButton('...', EVENT_BROWSEFILE, 300, 100, 30, 20, 'browse file')
+	export_all_button = Draw.Toggle('Export ALL objects', EVENT_NOEVENT, 40, 70, 200, 20, export_all_button.val)
+	export_test_button = Draw.Toggle('Export example project', EVENT_NOEVENT, 250, 70, 200, 20, export_test_button.val)
+	auto_skin_button = Draw.Toggle('Generate UV map if needed', EVENT_NOEVENT, 40, 45, 200, 20, auto_skin_button.val)
 	######### Draw and Exit Buttons
 	Draw.Button("Export",EVENT_EXPORT , 40, 20, 80, 18)
 	Draw.Button("Exit",EVENT_EXIT , 140, 20, 80, 18)
@@ -499,9 +525,9 @@ def draw():
 if Blender.mode == 'interactive':
 	Draw.Register(draw, event, bevent)
 else:
-	print("Command-line mode operation, exporting all objects")
+	print("Command-line mode operation, exporting all mesh objects")
 
 	sce = Blender.Scene.GetCurrent()
 	obs = [ob for ob in sce.objects if (ob.type in 'Mesh')]
 	#obs = [ob for ob in sce.objects if (ob.type in ['Mesh','Curve','Surf','MBall','Font'])]
-	export_list(obs,HxOptions("Haxe","",True))
+	export_list(obs,HxOptions("Haxe","",True,False))
