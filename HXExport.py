@@ -298,9 +298,6 @@ def export_to_hx(ob,options,cam,cam_geom):
                     ob.select(0)
                 import unwrap.uvcalc_smart_project
                 me = ob.getData(mesh=1)
-                #me.addUVLayer( "bake" )
-                #me.activeUVLayer = "bake"
-                #me.renderUVLayer = "bake"
                 img = Blender.Image.New("bake.tga",512,512,24)
                 img.filename = "bake.tga"
                 for f in me.faces:
@@ -308,7 +305,6 @@ def export_to_hx(ob,options,cam,cam_geom):
                 me.update()
                 unwrap.uvcalc_smart_project.uvcalc_main([ob])
                 me.update()
-		Blender.Save("test2.blend",1)
                 context = sce.getRenderingContext()
                 context.bakeMode = Blender.Scene.Render.BakeModes['TEXTURE']
 		context.enableOversampling(0)
@@ -322,7 +318,6 @@ def export_to_hx(ob,options,cam,cam_geom):
 		context.gaussFilterSize(0.5)
 		context.setRenderWinSize(25)
                 ob.select(1)
-		Blender.Save("test3.blend",1)
                 context.bake()
                 ob.select(0)
             except e:
