@@ -1,24 +1,38 @@
 
-This is to play around with exporting Blender models to Haxe.
+This is a utility for exporting Blender models to Haxe code.
+All material is released under the GPL, see HXExport.py for details.
 
-Based on code from Dennis Ippel at:
+It is based on the AS3Export utility from Dennis Ippel:
   http://www.rozengain.com/blog/2008/01/02/export-your-blender-objects-straight-to-away3d-papervision3d-and-sandy/
-used under the GPL.  Dennis accepted a patch for outputting Haxe; this
-code is basically that patch gone wild and taking over everything.
+Used under the GPL.
 
-  -- paulfitz, 2009
+It also uses the jinja2 templating system, under a BSD license.
+
+And ideaman's automatic UV unwrapping code is used in a lightly 
+modified version (modified for use without a GUI).
+
+An earlier version of this code was integrated with AS3Export.
+This code is basically that patch gone wild and taking over everything.
+
+  -- Paul Fitzpatrick, 2009
+     paulfitz at alum dot mit dot edu
 
 =======================================================================
 = INSTALLATION
-=
 
-Install this code in:
+Install this code in a directory called:
   .blender/scripts/blender2haxe
 or
   .blender\scripts\blender2haxe
 or whatever is appropriate for your operating system.
 
-Then from Blender, select an object, and do:
+The utility will work best with the imagemagick "convert" utility in
+your path, but it is not required.
+
+=======================================================================
+= USE
+
+From Blender, select an object, and do:
   File->Export->Haxe class
 
 You can also run the code from the command line, as follows:
@@ -27,7 +41,6 @@ You can also run the code from the command line, as follows:
 
 =======================================================================
 = FEATURES
-=
 
 * Works from export menu, or from command line.
 
@@ -36,6 +49,9 @@ You can also run the code from the command line, as follows:
 
 * For objects with a single UV image, that image will be automatically
   exported and used.
+
+* Option included for generating a basic UV image for objects that
+  don't have one.
 
 * Generates haxe project files (hxml) and example makefiles for Unix
   users.
