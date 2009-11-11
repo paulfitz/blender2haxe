@@ -29,6 +29,10 @@ or whatever is appropriate for your operating system.
 The utility will work best with the imagemagick "convert" utility in
 your path, but it is not required.
 
+The Haxe code generated uses the "sandy" library, so that needs to be
+installed.  This can be done with:
+  haxelib install sandy
+
 =======================================================================
 = USE
 
