@@ -76,7 +76,6 @@ import re
 from math import *
 from Blender.BGL import *
 
-
 # --------------------------------------------------------------------------
 # Store defaults in Blender
 
@@ -238,7 +237,7 @@ def convert_image(src,dest):
             im.save(file_base + ".png")
         except:
             import subprocess
-            subprocess.call(['convert', src, dest])
+            subprocess.call(['convert', '-quiet', src, dest])
 
 def haxeClassNamify(fname):
         fname = re.sub(r"[^a-zA-Z0-9]",r"",fname)
@@ -255,6 +254,39 @@ def export_to_hx(ob,options,cam,cam_geom):
         has_texture = False
 	me = Mesh.New()
 	me.getFromObject(ob,0)
+
+        if not(me.faceUV):
+            # try auto unwrapping
+            print("Trying unwrapping")
+            try:
+		sce = Blender.Scene.GetCurrent()
+                for o in sce.objects:
+                    ob.select(0)
+                import unwrap.uvcalc_smart_project
+                #Blender.Run(os.path.join(Blender.Get("scriptsdir"),
+                #         "blender/uvcalc_smart_project.py"))
+                #Window.EditMode(0)
+                me = ob.getData(False,True)
+                me.addUVLayer( "bake" )
+                me.activeUVLayer = "bake"
+                me.renderUVLayer = "bake"
+                img = Blender.Image.New("foo.tga",512,512,24)
+                img.filename = "foo.tga"
+                for f in me.faces:
+                    f.image = img
+                me.update()
+                unwrap.uvcalc_smart_project.uvcalc_main([ob])
+                me.update()
+                con = sce.getRenderingContext()
+                con.bakeMode = Blender.Scene.Render.BakeModes['TEXTURE']
+                ob.select(1)
+                Blender.Save("test2.blend",True)
+                con.bake()
+                ob.select(0)
+            except:
+                print "FAIL"
+                raise
+
 	
 	class_name = haxeClassNamify(ob.name)
 
@@ -267,7 +299,9 @@ def export_to_hx(ob,options,cam,cam_geom):
 		  'camera_geom': cam_geom }
 	
         images = dict()
+            
         if me.faceUV:
+            print("Scanning for UV image")
             for f in me.faces:
                 if f.image!=None:
                     images[f.image.getName()] = 1
