@@ -249,7 +249,7 @@ def save_file(file_name,class_name,output_file_name,tvars,options,packaged):
 	out.write(x)
 	out.close()
 	inf.close()
-	print "= Export Successful: "+reported_name
+	print "= Saved: "+reported_name
 
 def convert_image(src,dest):
         try:
@@ -340,18 +340,19 @@ def export_to_hx(ob,options,cam,cam_geom):
         images = dict()
             
         if me.faceUV:
-            print("Scanning for UV image")
             for f in me.faces:
                 if f.image!=None:
                     images[f.image.getName()] = 1
         images = images.keys()
-        if len(images)>0:
+        if len(images)==0:
+            print("= No UV image found")
+        else:
             if len(images)>1:
                 print("= Too many images on object")
             else:
                 # perfect, one image, we can deal with that
                 img = Blender.Image.Get(images[0])
-                print("= Processing image "+img.filename)
+                print("= Processing UV image "+img.filename)
 
                 original_name = img.filename
                 file_base = os.path.join(options.output_dir,class_name)
@@ -380,6 +381,7 @@ def export_to_hx(ob,options,cam,cam_geom):
                 img.filename = original_name
 
         rec = {'name':class_name, 'has_texture':has_texture}
+        print("= Generating files")
 	export_sandy([rec],tvars,options)
         return rec
                 
@@ -422,6 +424,7 @@ def export_list(obs,options):
                         break
             
             # make test code for all objects together
+            print("= Generating group file")
             export_sandy(recs,{'camera':cam,'camera_geom':cam_geom,
                                'hint': hint},options)
 
