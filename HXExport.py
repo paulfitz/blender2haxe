@@ -290,40 +290,17 @@ def export_to_hx(ob,options,cam,cam_geom):
 	me = Mesh.New()
 	me.getFromObject(ob,0)
 
-        if not(me.faceUV) and auto_skin:
+        if not(me.faceUV) and options.auto_skin:
             # try auto unwrapping
-            print("Trying unwrapping and baking to produce skin image")
+            print("= Trying unwrapping to produce UVs")
             try:
-                sce = Blender.Scene.GetCurrent()
-                for o in sce.objects:
-                    ob.select(0)
                 import unwrap.uvcalc_smart_project
                 me = ob.getData(mesh=1)
-                img = Blender.Image.New("bake.tga",512,512,24)
-                img.filename = "bake.tga"
-                for f in me.faces:
-                    f.image = img
-                me.update()
                 unwrap.uvcalc_smart_project.uvcalc_main([ob])
                 me.update()
-                context = sce.getRenderingContext()
-                context.bakeMode = Blender.Scene.Render.BakeModes['TEXTURE']
-		context.enableOversampling(0)
-		context.enableMotionBlur(0)
-		context.enableShadow(0)
-		context.enableEnvironmentMap(0)
-		context.enableRayTracing(0)
-		context.enableRadiosityRender(0)
-		context.enablePanorama(0)
-		context.enableFieldRendering(0)
-		context.gaussFilterSize(0.5)
-		context.setRenderWinSize(25)
-                ob.select(1)
-                context.bake()
-                ob.select(0)
             except e:
-                print "Unwrapping and baking didn't work out, skipping"
-		print "Problem:", e
+                print "= Unwrapping didn't work out, skipping"
+		print "= Problem:", e
 
         me = Mesh.New()
 	me.getFromObject(ob,0)
@@ -347,7 +324,39 @@ def export_to_hx(ob,options,cam,cam_geom):
         images = images.keys()
         if len(images)==0:
             print("= No UV image found")
-        else:
+        if me.faceUV and len(images)==0 and options.auto_skin:
+            print("= Trying baking to produce basic UV image")
+            try:
+                img = Blender.Image.New("bake.tga",512,512,24)
+                img.filename = "bake.tga"
+                me = ob.getData(mesh=1)
+                for f in me.faces:
+                    f.image = img
+                me.update()
+                sce = Blender.Scene.GetCurrent()
+                for o in sce.objects:
+                    o.select(0)
+                context = sce.getRenderingContext()
+                context.bakeMode = Blender.Scene.Render.BakeModes['TEXTURE']
+                context.enableOversampling(0)
+                context.enableMotionBlur(0)
+                context.enableShadow(0)
+                context.enableEnvironmentMap(0)
+                context.enableRayTracing(0)
+                context.enableRadiosityRender(0)
+                context.enablePanorama(0)
+                context.enableFieldRendering(0)
+                context.gaussFilterSize(0.5)
+                context.setRenderWinSize(25)
+                ob.select(1)
+                context.bake()
+                ob.select(0)
+                images = [img.name]
+            except e:
+                print "= Baking didn't work out, skipping"
+		print "= Problem:", e
+            
+        if len(images)>0:
             if len(images)>1:
                 print("= Too many images on object")
             else:
@@ -558,7 +567,12 @@ else:
             out_dir = os.environ['BLENDER2HAXE_DIR']
         except:
             out_dir = "Haxe"
-        
-        options = HxOptions(out_dir,"",True,False,"")
+
+        try:
+            auto_skin = int(os.environ['BLENDER2HAXE_AUTO_SKIN'])>0
+        except:
+            auto_skin = False
+
+        options = HxOptions(out_dir,"",True,auto_skin,"")
         
 	export_list(obs,options)

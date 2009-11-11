@@ -8,20 +8,30 @@
 SCRIPT=$HOME/.blender/scripts/blender2haxe/HXExport.py
 
 dir=Haxe
+auto_skin=0
 target=""
 
 if [ ! $# -gt 0 ]; then
-    echo "Usage:"
-    echo " blender2haxe -o <output_directory> target.blend"
+    echo "Example usage:"
+    echo " blender2haxe target.blend"
+    echo " blender2haxe --output <output_directory> target.blend"
+    echo " blender2haxe --auto_skin target.blend"
+    echo "   --output <output_directory>: sets where files will be put (default: Haxe)"
+    echo "   --auto_skin: UV map images will be added upon need (slow)"
     exit 1
 fi
 
 while [ $# -gt 0 ]; do
   case $1
   in
-    -o)
+    --output)
       dir=$2
       shift 2
+    ;;
+
+    --auto_skin|--autoskin)
+      auto_skin=1
+      shift
     ;;
 
     *)
@@ -38,7 +48,8 @@ fi
 
 echo "Working on $target"
 echo "Working in $dir"
+echo "Auto_skin set to $auto_skin"
 
-BLENDER2HAXE_DIR=$dir blender -b $target -P $SCRIPT
+BLENDER2HAXE_DIR=$dir BLENDER2HAXE_AUTO_SKIN=$auto_skin blender -b $target -P $SCRIPT
 
 
